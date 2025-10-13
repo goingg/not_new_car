@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request, send_from_directory, jsonify
 import os
 from pathlib import Path
 import sys
@@ -8,7 +8,7 @@ project_root = os.path.join(os.path.dirname(__file__))
 sys.path.insert(0, project_root)
 
 # 导入数据库操作模块
-from database import get_conn, read_data
+from database import get_conn, read_data, get_statistics_data
 
 app = Flask(__name__, static_folder='static')
 
@@ -35,27 +35,27 @@ def get_car_data(page=1, per_page=24):
                 # 根据车辆名称匹配图片
                 car_name = car['name']
                 matched_image = None
-                
+
                 # 首先尝试精确匹配
                 for img_file in image_files:
                     if img_file.name not in used_images and car_name in img_file.name:
                         matched_image = img_file
                         break
-                
+
                 # 如果没有精确匹配，尝试模糊匹配
                 if not matched_image:
                     for img_file in image_files:
                         if img_file.name not in used_images and car_name.split()[0] in img_file.name:
                             matched_image = img_file
                             break
-                
+
                 # 记录已使用的图片
                 if matched_image:
                     used_images.add(matched_image.name)
                     car['image_path'] = f"/car_img/{matched_image.name}"
                 else:
                     car['image_path'] = "/static/img/1.webp"
-                
+
                 car['year'] = car.get('year', "未知")
                 car['mileage'] = car.get('mileage', "里程待询")
         return cars, total_count
@@ -133,6 +133,29 @@ def car_list():
         total_pages=total_pages,
         total_count=total_count
     )
+
+
+@app.route('/api/statistics')
+def statistics_api():
+    """提供统计数据的API接口"""
+    try:
+        conn = get_conn()
+        stats_data = get_statistics_data(conn)
+        if stats_data:
+            return jsonify({
+                'success': True,
+                'data': stats_data
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '无法获取统计数据'
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取统计数据时出错: {str(e)}'
+        })
 
 
 # 添加自定义静态文件路由，提供car_img目录中的图片
