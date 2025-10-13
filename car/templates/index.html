@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>车车车 - 简约二手汽车交易平台</title>
+    <title>车车车 - 简约二手汽车平台</title>
     <!-- 外部资源 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -63,10 +63,10 @@
                 <div class="bg-gradient-to-r from-primary to-secondary rounded-2xl overflow-hidden shadow-xl mb-10">
                     <div class="flex">
                         <div class="w-1/2 p-12 flex flex-col justify-center text-white">
-                            <h1 class="text-4xl font-bold mb-4">找到你的理想二手车</h1>
-                            <p class="text-lg mb-6 opacity-90">海量车源，透明车况，专业检测</p>
+                            <h1 class="text-4xl font-bold mb-4">找不到你的理想二手车</h1>
+                            <p class="text-lg mb-6 opacity-90">海量车源，透明车况，不专业检测</p>
                             <div class="flex flex-wrap gap-3">
-                                <a href="/cars" class="nav-link bg-white text-primary px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors">
+                                <a href="/cars" class="nav-link bg-white text-primary px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors" data-target="cars">
                                     <i class="fa fa-search mr-2"></i> 查看全部
                                 </a>
                                 <button class="nav-link bg-accent text-white px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors" data-target="analytics">
@@ -84,11 +84,11 @@
                 <div class="mb-10">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold">热门推荐</h2>
-<!--                        <a href="#" class="nav-link text-primary hover:underline" data-target="cars">查看全部</a>-->
                     </div>
                     <div class="grid grid-cols-4 gap-6" id="recommended-cars">
                         <!-- 加载状态 -->
                         {% for car in cars %}
+                        {% if loop.index <= 8 %}  <!-- 限制首页只显示前8辆车（两行） -->
                         <div class="bg-white rounded-xl overflow-hidden shadow hover:shadow-md transition-shadow">
                             <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-48 object-cover">
                             <div class="p-4">
@@ -97,6 +97,7 @@
                                 <div class="text-primary font-bold">{{ car.price }}</div>
                             </div>
                         </div>
+                        {% endif %}
                         {% else %}
                         <div class="animate-pulse bg-white rounded-xl overflow-hidden shadow">
                             <div class="bg-gray-200 h-48"></div>
@@ -108,68 +109,6 @@
                         </div>
                         {% endfor %}
                     </div>
-                    
-                    <!-- 首页分页 -->
-                    {% if total_pages > 1 %}
-                    <div class="flex justify-center mt-8">
-                        <nav class="flex items-center space-x-1">
-                            {% if current_page > 1 %}
-                            <a href="?page={{ current_page - 1 }}" class="px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50">
-                                <i class="fa fa-angle-left"></i>
-                            </a>
-                            {% else %}
-                            <span class="px-3 py-2 rounded border border-gray-300 text-gray-300 cursor-not-allowed">
-                                <i class="fa fa-angle-left"></i>
-                            </span>
-                            {% endif %}
-
-                            {% for page_num in range([1, current_page-2]|max, [total_pages+1, current_page+3]|min) %}
-                                {% if page_num == current_page %}
-                                <a href="?page={{ page_num }}" class="px-3 py-2 rounded bg-primary text-white">{{ page_num }}</a>
-                                {% else %}
-                                <a href="?page={{ page_num }}" class="px-3 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">{{ page_num }}</a>
-                                {% endif %}
-                            {% endfor %}
-
-                            {% if current_page < total_pages %}
-                            <a href="?page={{ current_page + 1 }}" class="px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
-                            {% else %}
-                            <span class="px-3 py-2 rounded border border-gray-300 text-gray-300 cursor-not-allowed">
-                                <i class="fa fa-angle-right"></i>
-                            </span>
-                            {% endif %}
-                        </nav>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- 价格区间 -->
-                <div>
-                    <h2 class="text-2xl font-bold mb-6">按价格筛选</h2>
-                    <div class="grid grid-cols-5 gap-4">
-                        <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
-                            <span class="block text-lg font-bold text-primary">10万以下</span>
-                            <span class="text-sm text-gray-500">经济实惠</span>
-                        </button>
-                        <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
-                            <span class="block text-lg font-bold text-primary">10-20万</span>
-                            <span class="text-sm text-gray-500">家用首选</span>
-                        </button>
-                        <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
-                            <span class="block text-lg font-bold text-primary">20-30万</span>
-                            <span class="text-sm text-gray-500">品质之选</span>
-                        </button>
-                        <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
-                            <span class="block text-lg font-bold text-primary">30-50万</span>
-                            <span class="text-sm text-gray-500">豪华舒适</span>
-                        </button>
-                        <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
-                            <span class="block text-lg font-bold text-primary">50万以上</span>
-                            <span class="text-sm text-gray-500">高端定制</span>
-                        </button>
-                    </div>
                 </div>
             </section>
 
@@ -178,6 +117,32 @@
                 <div class="flex gap-6">
                     <!-- 车辆列表 -->
                     <div class="w-full">
+                        <!-- 价格区间 -->
+                        <div class="mb-8">
+                            <h2 class="text-2xl font-bold mb-6">按价格筛选</h2>
+                            <div class="grid grid-cols-5 gap-4">
+                                <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
+                                    <span class="block text-lg font-bold text-primary">10万以下</span>
+                                    <span class="text-sm text-gray-500" id="price-range-1">经济实惠</span>
+                                </button>
+                                <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
+                                    <span class="block text-lg font-bold text-primary">10-20万</span>
+                                    <span class="text-sm text-gray-500" id="price-range-2">家用首选</span>
+                                </button>
+                                <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
+                                    <span class="block text-lg font-bold text-primary">20-30万</span>
+                                    <span class="text-sm text-gray-500" id="price-range-3">品质之选</span>
+                                </button>
+                                <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
+                                    <span class="block text-lg font-bold text-primary">30-50万</span>
+                                    <span class="text-sm text-gray-500" id="price-range-4">豪华舒适</span>
+                                </button>
+                                <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
+                                    <span class="block text-lg font-bold text-primary">50万以上</span>
+                                    <span class="text-sm text-gray-500" id="price-range-5">高端定制</span>
+                                </button>
+                            </div>
+                        </div>
 
                         <!-- 车辆卡片列表 -->
                         <div class="grid grid-cols-4 gap-6" id="car-list">
@@ -244,14 +209,14 @@
                     <h2 class="text-2xl font-bold mb-6">二手车市场数据分析</h2>
 
                     <!-- 数据概览 -->
-                    <div class="grid grid-cols-4 gap-4 mb-8">
+                    <div class="grid grid-cols-4 gap-4 mb-8" id="data-overview">
                         <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
                             <h3 class="text-sm font-medium text-blue-800 mb-2">平均价格</h3>
-                            <p class="text-2xl font-bold text-blue-900">¥285,000</p>
+                            <p class="text-2xl font-bold text-blue-900" id="avg-price">¥--</p>
                         </div>
                         <div class="bg-green-50 rounded-xl p-4 border border-green-100">
                             <h3 class="text-sm font-medium text-green-800 mb-2">交易量</h3>
-                            <p class="text-2xl font-bold text-green-900">1,250,000</p>
+                            <p class="text-2xl font-bold text-green-900" id="total-count">--</p>
                         </div>
                         <div class="bg-purple-50 rounded-xl p-4 border border-purple-100">
                             <h3 class="text-sm font-medium text-purple-800 mb-2">平均车龄</h3>
@@ -270,14 +235,6 @@
                             <canvas id="priceTrendChart"></canvas>
                         </div>
                     </div>
-
-                    <!-- 品牌热度 -->
-                    <div>
-                        <h3 class="text-lg font-semibold mb-4">品牌热度分布</h3>
-                        <div class="bg-white rounded-xl border border-gray-200 p-4 h-64">
-                            <canvas id="brandChart"></canvas>
-                        </div>
-                    </div>
                 </div>
             </section>
         </div>
@@ -291,8 +248,8 @@
                     <i class="fa fa-car text-2xl"></i>
                     <span class="text-xl font-bold">车车车</span>
                 </div>
-                <p class="text-gray-400 mb-4">专业的二手车交易平台</p>
-                <p class="text-gray-500 text-sm">&copy; 2025 车车车. 保留所有权利.</p>
+                <p class="text-gray-400 mb-4">不专业的二手车交易平台</p>
+                <p class="text-gray-500 text-sm">&copy; 2025 车车车. 不保留所有权利.</p>
             </div>
         </div>
     </footer>
@@ -303,6 +260,58 @@
             // 导航切换
             const navLinks = document.querySelectorAll('.nav-link[data-target]');
             const pageSections = document.querySelectorAll('.page-section');
+            
+            // 根据当前URL确定应该显示的页面
+            function showPageBasedOnURL() {
+                const path = window.location.pathname;
+                const params = new URLSearchParams(window.location.search);
+                const page = params.get('page') || '1';
+                
+                if (path === '/cars') {
+                    // 显示二手车页面
+                    navLinks.forEach(link => {
+                        link.classList.remove('active', 'text-primary');
+                        link.classList.add('text-gray-600');
+                    });
+                    document.querySelectorAll('[data-target="cars"]').forEach(link => {
+                        link.classList.add('active', 'text-primary');
+                        link.classList.remove('text-gray-600');
+                    });
+                    
+                    pageSections.forEach(section => section.classList.add('hidden'));
+                    document.getElementById('cars').classList.remove('hidden');
+                } else if (path === '/analytics') {
+                    // 显示数据分析页面
+                    navLinks.forEach(link => {
+                        link.classList.remove('active', 'text-primary');
+                        link.classList.add('text-gray-600');
+                    });
+                    document.querySelectorAll('[data-target="analytics"]').forEach(link => {
+                        link.classList.add('active', 'text-primary');
+                        link.classList.remove('text-gray-600');
+                    });
+                    
+                    pageSections.forEach(section => section.classList.add('hidden'));
+                    document.getElementById('analytics').classList.remove('hidden');
+                    initCharts();
+                } else {
+                    // 显示首页
+                    navLinks.forEach(link => {
+                        link.classList.remove('active', 'text-primary');
+                        link.classList.add('text-gray-600');
+                    });
+                    document.querySelectorAll('[data-target="home"]').forEach(link => {
+                        link.classList.add('active', 'text-primary');
+                        link.classList.remove('text-gray-600');
+                    });
+                    
+                    pageSections.forEach(section => section.classList.add('hidden'));
+                    document.getElementById('home').classList.remove('hidden');
+                }
+            }
+            
+            // 初始化时根据URL显示正确的页面
+            showPageBasedOnURL();
 
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
@@ -328,55 +337,95 @@
                         if (target === 'analytics') {
                             initCharts();
                         }
+                        
+                        // 更新URL但不刷新页面
+                        const url = target === 'home' ? '/' : `/${target}`;
+                        history.pushState({page: target}, '', url);
                     }
                 });
+            });
+            
+            // 监听浏览器的前进后退按钮
+            window.addEventListener('popstate', function(event) {
+                showPageBasedOnURL();
             });
 
             // 初始化图表
             function initCharts() {
-                // 价格趋势图
-                const priceCtx = document.getElementById('priceTrendChart').getContext('2d');
-                new Chart(priceCtx, {
-                    type: 'line',
-                    data: {
-                        labels: ['2018', '2019', '2020', '2021', '2022', '2023'],
-                        datasets: [{
-                            label: '平均价格 (元)',
-                            data: [350000, 265000, 280000, 295000, 210000, 325000],
-                            borderColor: '#1E40AF',
-                            backgroundColor: 'rgba(30, 64, 175, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-
-                // 品牌分布图表
-                const brandCtx = document.getElementById('brandChart').getContext('2d');
-                new Chart(brandCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: ['宝马', '奔驰', '奥迪', '丰田', '本田', '其他'],
-                        datasets: [{
-                            data: [25, 18, 16, 15, 16, 10],
-                            backgroundColor: [
-                                '#1E40AF', '#0EA5E9', '#F97316',
-                                '#EC4899', '#A855F7', '#64748B'
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'right' }
+                // 获取真实数据
+                fetch('/api/statistics')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const statsData = data.data;
+                            
+                            // 更新数据概览
+                            document.getElementById('avg-price').textContent = '¥' + Math.round(statsData.avg_price).toLocaleString();
+                            document.getElementById('total-count').textContent = statsData.total_count.toLocaleString();
+                            
+                            // 价格趋势图（这里使用模拟数据，因为数据库中没有年份信息）
+                            const priceCtx = document.getElementById('priceTrendChart').getContext('2d');
+                            // 清除之前的图表实例（如果存在）
+                            if (window.priceChart) {
+                                window.priceChart.destroy();
+                            }
+                            window.priceChart = new Chart(priceCtx, {
+                                type: 'line',
+                                data: {
+                                    labels: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                                    datasets: [{
+                                        label: '平均价格 (元)',
+                                        data: [350000, 265000, 280000, 295000, 210000, Math.round(statsData.avg_price)],
+                                        borderColor: '#1E40AF',
+                                        backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                                        fill: true,
+                                        tension: 0.3
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false
+                                }
+                            });
+                            
+                            // 清除之前的图表实例（如果存在）
+                            if (window.brandChart) {
+                                window.brandChart.destroy();
+                            }
+                            window.brandChart = new Chart(brandCtx, {
+                                type: 'pie',
+                                data: {
+                                    labels: brandLabels,
+                                    datasets: [{
+                                        data: brandCounts,
+                                        backgroundColor: [
+                                            '#1E40AF', '#0EA5E9', '#F97316',
+                                            '#EC4899', '#A855F7', '#64748B'
+                                        ]
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { position: 'right' }
+                                    }
+                                }
+                            });
+                            
+                            // 更新价格区间数据
+                            const priceRangeData = statsData.price_range_data;
+                            for (let i = 0; i < priceRangeData.length && i < 5; i++) {
+                                const element = document.getElementById(`price-range-${i+1}`);
+                                if (element) {
+                                    element.textContent = `${priceRangeData[i].count} 辆车`;
+                                }
+                            }
                         }
-                    }
-                });
+                    })
+                    .catch(error => {
+                        console.error('获取统计数据失败:', error);
+                    });
             }
         });
     </script>
