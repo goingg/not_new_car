@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 import os
 from pathlib import Path
 import sys
@@ -29,11 +29,33 @@ def get_car_data(page=1, per_page=24):
         car_img_dir = Path("car_img")
         if car_img_dir.exists():
             image_files = list(car_img_dir.glob("*.jpg"))
+            # 创建一个图片使用记录
+            used_images = set()
             for i, car in enumerate(cars):
-                # 循环分配图片
-                img_idx = i % len(image_files) if image_files else 0
-                car['image_path'] = f"/car_img/{image_files[img_idx].name}" if image_files else "/img/1.webp"
-                # 补充缺失字段
+                # 根据车辆名称匹配图片
+                car_name = car['name']
+                matched_image = None
+                
+                # 首先尝试精确匹配
+                for img_file in image_files:
+                    if img_file.name not in used_images and car_name in img_file.name:
+                        matched_image = img_file
+                        break
+                
+                # 如果没有精确匹配，尝试模糊匹配
+                if not matched_image:
+                    for img_file in image_files:
+                        if img_file.name not in used_images and car_name.split()[0] in img_file.name:
+                            matched_image = img_file
+                            break
+                
+                # 记录已使用的图片
+                if matched_image:
+                    used_images.add(matched_image.name)
+                    car['image_path'] = f"/car_img/{matched_image.name}"
+                else:
+                    car['image_path'] = "/static/img/1.webp"
+                
                 car['year'] = car.get('year', "未知")
                 car['mileage'] = car.get('mileage', "里程待询")
         return cars, total_count
@@ -111,6 +133,12 @@ def car_list():
         total_pages=total_pages,
         total_count=total_count
     )
+
+
+# 添加自定义静态文件路由，提供car_img目录中的图片
+@app.route('/car_img/<path:filename>')
+def custom_static(filename):
+    return send_from_directory('car_img', filename)
 
 
 if __name__ == '__main__':

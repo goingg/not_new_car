@@ -3,35 +3,24 @@ import pymysql
 
 def get_conn(db_name='car'):
     """获取数据库连接，不存在则创建数据库"""
-    try:
+    def user():
         return pymysql.connect(
             host='localhost',
             port=3306,
-            user='root',  # 替换为你的MySQL用户名
-            passwd='1234',  # 替换为你的MySQL密码
+            user='root',
+            passwd='1234',
             db=db_name,
-            charset='utf8mb4'
-        )
+            charset='utf8mb4')
+
+    try:
+        return user()
     except pymysql.err.OperationalError as e:
         if "Unknown database" in str(e):
             # 创建数据库
-            conn = pymysql.connect(
-                host='localhost',
-                port=3306,
-                user='root',
-                passwd='1234',
-                charset='utf8mb4'
-            )
+            conn = user()
             create_database(conn, db_name)
             conn.close()
-            return pymysql.connect(
-                host='localhost',
-                port=3306,
-                user='root',
-                passwd='1234',
-                db=db_name,
-                charset='utf8mb4'
-            )
+            return user()
         else:
             raise e
 
