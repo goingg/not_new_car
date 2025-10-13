@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>车车车 - 简约二手汽车交易平台</title>
+    <!-- 外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E40AF',
+                        secondary: '#0EA5E9',
+                        accent: '#F97316',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-md fixed w-full z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <div class="flex items-center space-x-2">
+                    <div class="text-primary text-3xl">
+                        <i class="fa fa-car"></i>
+                    </div>
+                    <span class="text-2xl font-bold text-primary">车车车</span>
+                </div>
+
+                <!-- 导航链接 -->
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="nav-link active text-primary font-medium" data-target="home">首页</a>
+                    <a href="/cars" class="nav-link text-gray-600 hover:text-primary" data-target="cars">二手车</a>
+                    <a href="#" class="nav-link text-gray-600 hover:text-primary" data-target="analytics">数据分析</a>
+                </div>
+
+                <!-- 搜索框 -->
+                <div class="relative w-64">
+                    <input type="text" placeholder="搜索品牌、车型..." class="w-full py-2 pl-10 pr-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
+                    <div class="absolute left-3 top-2.5 text-gray-400">
+                        <i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 pt-24 pb-16">
+        <div id="page-content">
+            <!-- 首页 -->
+            <section id="home" class="page-section active">
+                <!-- 英雄区域 -->
+                <div class="bg-gradient-to-r from-primary to-secondary rounded-2xl overflow-hidden shadow-xl mb-10">
+                    <div class="flex">
+                        <div class="w-1/2 p-12 flex flex-col justify-center text-white">
+                            <h1 class="text-4xl font-bold mb-4">找到你的理想二手车</h1>
+                            <p class="text-lg mb-6 opacity-90">海量车源，透明车况，专业检测</p>
+                            <div class="flex flex-wrap gap-3">
+                                <a href="/cars" class="nav-link bg-white text-primary px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors">
+                                    <i class="fa fa-search mr-2"></i> 查看全部
+                                </a>
+                                <button class="nav-link bg-accent text-white px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors" data-target="analytics">
+                                    <i class=" fa fa-line-chart mr-2"></i> 数据分析
+                                </button>
+                            </div>
+                        </div>
+                        <div class="w-1/2 h-auto relative">
+                            <img src="https://picsum.photos/id/111/800/500" alt="二手车展示" class="absolute inset-0 w-full h-full object-cover">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 推荐车辆 -->
+                <div class="mb-10">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">热门推荐</h2>
+<!--                        <a href="#" class="nav-link text-primary hover:underline" data-target="cars">查看全部</a>-->
+                    </div>
+                    <div class="grid grid-cols-4 gap-6" id="recommended-cars">
+                        <!-- 加载状态 -->
+                        {% for car in cars %}
+                        <div class="bg-white rounded-xl overflow-hidden shadow hover:shadow-md transition-shadow">
+                            <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-48 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-lg font-bold">{{ car.brand }} {{ car.model }}</h3>
+                                <div class="text-gray-500 text-sm mb-2">{{ car.year }}年 · {{ car.mileage }}</div>
+                                <div class="text-primary font-bold">{{ car.price }}</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="animate-pulse bg-white rounded-xl overflow-hidden shadow">
+                            <div class="bg-gray-200 h-48"></div>
+                            <div class="p-4">
+                                <div class="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                <div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                                <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- 首页分页 -->
+                    {% if total_pages > 1 %}
+                    <div class="flex justify-center mt-8">
+                        <nav class="flex items-center space-x-1">
+                            {% if current_page > 1 %}
+                            <a href="?page={{ current_page - 1 }}" class="px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            {% else %}
+                            <span class="px-3 py-2 rounded border border-gray-300 text-gray-300 cursor-not-allowed">
+                                <i class="fa fa-angle-left"></i>
+                            </span>
+                            {% endif %}
+
+                            {% for page_num in range([1, current_page-2]|max, [total_pages+1, current_page+3]|min) %}
+                                {% if page_num == current_page %}
+                                <a href="?page={{ page_num }}" class="px-3 py-2 rounded bg-primary text-white">{{ page_num }}</a>
+                                {% else %}
+                                <a href="?page={{ page_num }}" class="px-3 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">{{ page_num }}</a>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if current_page < total_pages %}
+                            <a href="?page={{ current_page + 1 }}" class="px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                            {% else %}
+                            <span class="px-3 py-2 rounded border border-gray-300 text-gray-300 cursor-not-allowed">
+                                <i class="fa fa-angle-right"></i>
+                            </span>
+                            {% endif %}
+                        </nav>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 价格区间 -->
+                <div>
+                    <h2 class="text-2xl font-bold mb-6">按价格筛选</h2>
+                    <div class="grid grid-cols-5 gap-4">
+                        <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
+                            <span class="block text-lg font-bold text-primary">10万以下</span>
+                            <span class="text-sm text-gray-500">经济实惠</span>
+                        </button>
+                        <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
+                            <span class="block text-lg font-bold text-primary">10-20万</span>
+                            <span class="text-sm text-gray-500">家用首选</span>
+                        </button>
+                        <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
+                            <span class="block text-lg font-bold text-primary">20-30万</span>
+                            <span class="text-sm text-gray-500">品质之选</span>
+                        </button>
+                        <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
+                            <span class="block text-lg font-bold text-primary">30-50万</span>
+                            <span class="text-sm text-gray-500">豪华舒适</span>
+                        </button>
+                        <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
+                            <span class="block text-lg font-bold text-primary">50万以上</span>
+                            <span class="text-sm text-gray-500">高端定制</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 二手车列表页 -->
+            <section id="cars" class="page-section hidden">
+                <div class="flex gap-6">
+                    <!-- 车辆列表 -->
+                    <div class="w-full">
+                        <!-- 排序 -->
+                        <div class="bg-white rounded-xl shadow p-4 mb-6">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-500">共 <span class="text-primary font-medium">{{ cars|length }}</span> 辆车</span>
+                                <select class="p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary">
+                                    <option value="recommend">推荐排序</option>
+                                    <option value="price-asc">价格从低到高</option>
+                                    <option value="price-desc">价格从高到低</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 车辆卡片列表 -->
+                        <div class="grid grid-cols-4 gap-6" id="car-list">
+                            {% for car in cars %}
+                            <div class="bg-white rounded-xl overflow-hidden shadow hover:shadow-md transition-shadow">
+                                <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-48 object-cover">
+                                <div class="p-4">
+                                    <h3 class="text-lg font-bold">{{ car.brand }} {{ car.model }}</h3>
+                                    <div class="text-gray-500 text-sm mb-2">{{ car.year }}年 · {{ car.mileage }}</div>
+                                    <div class="text-primary font-bold">{{ car.price }}</div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="animate-pulse bg-white rounded-xl overflow-hidden shadow">
+                                <div class="bg-gray-200 h-48"></div>
+                                <div class="p-4">
+                                    <div class="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                    <div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                                    <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- 分页 -->
+                        <div class="flex justify-center mt-8">
+                            <nav class="flex items-center space-x-1">
+                                {% if current_page > 1 %}
+                                <a href="?page={{ current_page - 1 }}" class="px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50">
+                                    <i class="fa fa-angle-left"></i>
+                                </a>
+                                {% else %}
+                                <span class="px-3 py-2 rounded border border-gray-300 text-gray-300 cursor-not-allowed">
+                                    <i class="fa fa-angle-left"></i>
+                                </span>
+                                {% endif %}
+
+                                {% for page_num in range([1, current_page-2]|max, [total_pages+1, current_page+3]|min) %}
+                                    {% if page_num == current_page %}
+                                    <a href="?page={{ page_num }}" class="px-3 py-2 rounded bg-primary text-white">{{ page_num }}</a>
+                                    {% else %}
+                                    <a href="?page={{ page_num }}" class="px-3 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">{{ page_num }}</a>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if current_page < total_pages %}
+                                <a href="?page={{ current_page + 1 }}" class="px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50">
+                                    <i class="fa fa-angle-right"></i>
+                                </a>
+                                {% else %}
+                                <span class="px-3 py-2 rounded border border-gray-300 text-gray-300 cursor-not-allowed">
+                                    <i class="fa fa-angle-right"></i>
+                                </span>
+                                {% endif %}
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 数据分析页 -->
+            <section id="analytics" class="page-section hidden">
+                <div class="bg-white rounded-xl shadow p-6 mb-8">
+                    <h2 class="text-2xl font-bold mb-6">二手车市场数据分析</h2>
+
+                    <!-- 数据概览 -->
+                    <div class="grid grid-cols-4 gap-4 mb-8">
+                        <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                            <h3 class="text-sm font-medium text-blue-800 mb-2">平均价格</h3>
+                            <p class="text-2xl font-bold text-blue-900">¥285,000</p>
+                        </div>
+                        <div class="bg-green-50 rounded-xl p-4 border border-green-100">
+                            <h3 class="text-sm font-medium text-green-800 mb-2">交易量</h3>
+                            <p class="text-2xl font-bold text-green-900">1,250,000</p>
+                        </div>
+                        <div class="bg-purple-50 rounded-xl p-4 border border-purple-100">
+                            <h3 class="text-sm font-medium text-purple-800 mb-2">平均车龄</h3>
+                            <p class="text-2xl font-bold text-purple-900">3.2年</p>
+                        </div>
+                        <div class="bg-orange-50 rounded-xl p-4 border border-orange-100">
+                            <h3 class="text-sm font-medium text-orange-800 mb-2">平均里程</h3>
+                            <p class="text-2xl font-bold text-orange-900">45,800公里</p>
+                        </div>
+                    </div>
+
+                    <!-- 价格趋势图 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold mb-4">二手车价格趋势</h3>
+                        <div class="bg-white rounded-xl border border-gray-200 p-4 h-64">
+                            <canvas id="priceTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 品牌热度 -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">品牌热度分布</h3>
+                        <div class="bg-white rounded-xl border border-gray-200 p-4 h-64">
+                            <canvas id="brandChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <i class="fa fa-car text-2xl"></i>
+                    <span class="text-xl font-bold">车车车</span>
+                </div>
+                <p class="text-gray-400 mb-4">专业的二手车交易平台</p>
+                <p class="text-gray-500 text-sm">&copy; 2025 车车车. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 导航切换
+            const navLinks = document.querySelectorAll('.nav-link[data-target]');
+            const pageSections = document.querySelectorAll('.page-section');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // 对于外部链接（如/cars），不需要阻止默认行为
+                    const target = this.getAttribute('data-target');
+                    if (target) {
+                        e.preventDefault();
+                        // 更新导航状态
+                        navLinks.forEach(link => {
+                            link.classList.remove('active', 'text-primary');
+                            link.classList.add('text-gray-600');
+                        });
+                        document.querySelectorAll(`[data-target="${target}"]`).forEach(link => {
+                            link.classList.add('active', 'text-primary');
+                            link.classList.remove('text-gray-600');
+                        });
+
+                        // 显示目标页面
+                        pageSections.forEach(section => section.classList.add('hidden'));
+                        document.getElementById(target).classList.remove('hidden');
+
+                        // 初始化图表
+                        if (target === 'analytics') {
+                            initCharts();
+                        }
+                    }
+                });
+            });
+
+            // 初始化图表
+            function initCharts() {
+                // 价格趋势图
+                const priceCtx = document.getElementById('priceTrendChart').getContext('2d');
+                new Chart(priceCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                        datasets: [{
+                            label: '平均价格 (元)',
+                            data: [350000, 265000, 280000, 295000, 210000, 325000],
+                            borderColor: '#1E40AF',
+                            backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+
+                // 品牌分布图表
+                const brandCtx = document.getElementById('brandChart').getContext('2d');
+                new Chart(brandCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['宝马', '奔驰', '奥迪', '丰田', '本田', '其他'],
+                        datasets: [{
+                            data: [25, 18, 16, 15, 16, 10],
+                            backgroundColor: [
+                                '#1E40AF', '#0EA5E9', '#F97316',
+                                '#EC4899', '#A855F7', '#64748B'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right' }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
