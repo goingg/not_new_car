@@ -37,18 +37,16 @@
                 </div>
 
                 <!-- 导航链接 -->
-                <div class="flex items-center space-x-6">
-                    <a href="/" class="nav-link active text-primary font-medium" data-target="home">首页</a>
-                    <a href="/cars" class="nav-link text-gray-600 hover:text-primary" data-target="cars">二手车</a>
-                    <a href="#" class="nav-link text-gray-600 hover:text-primary" data-target="analytics">数据分析</a>
-                </div>
-
-                <!-- 搜索框 -->
-                <div class="relative w-64">
-                    <input type="text" placeholder="搜索品牌、车型..." class="w-full py-2 pl-10 pr-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
-                    <div class="absolute left-3 top-2.5 text-gray-400">
-                        <i class="fa fa-search"></i>
-                    </div>
+                <div class="flex items-center space-x-1">
+                    <a href="/" class="nav-link active text-primary font-medium px-5 py-2 rounded-lg hover:bg-gray-100 transition-colors" data-target="home">
+                        <i class="fa fa-home mr-2"></i>首页
+                    </a>
+                    <a href="/cars" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center" data-target="cars">
+                        <i class="fa fa-car mr-2"></i>二手车
+                    </a>
+                    <a href="#" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center" data-target="analytics">
+                        <i class="fa fa-line-chart mr-2"></i>数据分析
+                    </a>
                 </div>
             </div>
         </div>
@@ -66,11 +64,11 @@
                             <h1 class="text-4xl font-bold mb-4">找不到你的理想二手车</h1>
                             <p class="text-lg mb-6 opacity-90">海量车源，透明车况，不专业检测</p>
                             <div class="flex flex-wrap gap-3">
-                                <a href="/cars" class="nav-link bg-white text-primary px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors" data-target="cars">
+                                <a href="/cars" class="nav-link bg-white text-primary px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors flex items-center" data-target="cars">
                                     <i class="fa fa-search mr-2"></i> 查看全部
                                 </a>
-                                <button class="nav-link bg-accent text-white px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors" data-target="analytics">
-                                    <i class=" fa fa-line-chart mr-2"></i> 数据分析
+                                <button class="nav-link bg-accent text-white px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors flex items-center" data-target="analytics">
+                                    <i class="fa fa-line-chart mr-2"></i> 数据分析
                                 </button>
                             </div>
                         </div>
@@ -89,14 +87,14 @@
                         <!-- 加载状态 -->
                         {% for car in cars %}
                         {% if loop.index <= 8 %}  <!-- 限制首页只显示前8辆车（两行） -->
-                        <div class="bg-white rounded-xl overflow-hidden shadow hover:shadow-md transition-shadow">
+                        <a href="/car/{{ car.id }}" class="bg-white rounded-xl overflow-hidden shadow hover:shadow-md transition-shadow block">
                             <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-48 object-cover">
                             <div class="p-4">
                                 <h3 class="text-lg font-bold">{{ car.brand }} {{ car.model }}</h3>
                                 <div class="text-gray-500 text-sm mb-2">{{ car.year }}年 · {{ car.mileage }}</div>
                                 <div class="text-primary font-bold">{{ car.price }}</div>
                             </div>
-                        </div>
+                        </a>
                         {% endif %}
                         {% else %}
                         <div class="animate-pulse bg-white rounded-xl overflow-hidden shadow">
@@ -147,14 +145,14 @@
                         <!-- 车辆卡片列表 -->
                         <div class="grid grid-cols-4 gap-6" id="car-list">
                             {% for car in cars %}
-                            <div class="bg-white rounded-xl overflow-hidden shadow hover:shadow-md transition-shadow">
+                            <a href="/car/{{ car.id }}" class="bg-white rounded-xl overflow-hidden shadow hover:shadow-md transition-shadow block">
                                 <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-48 object-cover">
                                 <div class="p-4">
                                     <h3 class="text-lg font-bold">{{ car.brand }} {{ car.model }}</h3>
                                     <div class="text-gray-500 text-sm mb-2">{{ car.year }}年 · {{ car.mileage }}</div>
                                     <div class="text-primary font-bold">{{ car.price }}</div>
                                 </div>
-                            </div>
+                            </a>
                             {% else %}
                             <div class="animate-pulse bg-white rounded-xl overflow-hidden shadow">
                                 <div class="bg-gray-200 h-48"></div>
@@ -249,7 +247,7 @@
                     <span class="text-xl font-bold">车车车</span>
                 </div>
                 <p class="text-gray-400 mb-4">不专业的二手车交易平台</p>
-                <p class="text-gray-500 text-sm">&copy; 2025 车车车. 不保留所有权利.</p>
+                <p class="text-gray-500 text-sm">&copy; 2025 车车车. 保留所有权利.</p>
             </div>
         </div>
     </footer>
@@ -270,11 +268,11 @@
                 if (path === '/cars') {
                     // 显示二手车页面
                     navLinks.forEach(link => {
-                        link.classList.remove('active', 'text-primary');
+                        link.classList.remove('active', 'text-primary', 'bg-gray-100');
                         link.classList.add('text-gray-600');
                     });
                     document.querySelectorAll('[data-target="cars"]').forEach(link => {
-                        link.classList.add('active', 'text-primary');
+                        link.classList.add('active', 'text-primary', 'bg-gray-100');
                         link.classList.remove('text-gray-600');
                     });
                     
@@ -283,11 +281,11 @@
                 } else if (path === '/analytics') {
                     // 显示数据分析页面
                     navLinks.forEach(link => {
-                        link.classList.remove('active', 'text-primary');
+                        link.classList.remove('active', 'text-primary', 'bg-gray-100');
                         link.classList.add('text-gray-600');
                     });
                     document.querySelectorAll('[data-target="analytics"]').forEach(link => {
-                        link.classList.add('active', 'text-primary');
+                        link.classList.add('active', 'text-primary', 'bg-gray-100');
                         link.classList.remove('text-gray-600');
                     });
                     
@@ -297,11 +295,11 @@
                 } else {
                     // 显示首页
                     navLinks.forEach(link => {
-                        link.classList.remove('active', 'text-primary');
+                        link.classList.remove('active', 'text-primary', 'bg-gray-100');
                         link.classList.add('text-gray-600');
                     });
                     document.querySelectorAll('[data-target="home"]').forEach(link => {
-                        link.classList.add('active', 'text-primary');
+                        link.classList.add('active', 'text-primary', 'bg-gray-100');
                         link.classList.remove('text-gray-600');
                     });
                     
@@ -321,11 +319,11 @@
                         e.preventDefault();
                         // 更新导航状态
                         navLinks.forEach(link => {
-                            link.classList.remove('active', 'text-primary');
+                            link.classList.remove('active', 'text-primary', 'bg-gray-100');
                             link.classList.add('text-gray-600');
                         });
                         document.querySelectorAll(`[data-target="${target}"]`).forEach(link => {
-                            link.classList.add('active', 'text-primary');
+                            link.classList.add('active', 'text-primary', 'bg-gray-100');
                             link.classList.remove('text-gray-600');
                         });
 

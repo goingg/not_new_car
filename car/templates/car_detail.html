@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ car.name }} - 车车车二手车平台</title>
+    <!-- 外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E40AF',
+                        secondary: '#0EA5E9',
+                        accent: '#F97316',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-md fixed w-full z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <div class="flex items-center space-x-2">
+                    <div class="text-primary text-3xl">
+                        <i class="fa fa-car"></i>
+                    </div>
+                    <a href="/" class="text-2xl font-bold text-primary">车车车</a>
+                </div>
+
+                <!-- 导航链接 -->
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="nav-link text-gray-600 hover:text-primary">首页</a>
+                    <a href="/cars" class="nav-link text-gray-600 hover:text-primary">二手车</a>
+                    <a href="#" class="nav-link text-gray-600 hover:text-primary">数据分析</a>
+                </div>
+
+                <!-- 搜索框 -->
+                <div class="relative w-64">
+                    <input type="text" placeholder="搜索品牌、车型..." class="w-full py-2 pl-10 pr-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
+                    <div class="absolute left-3 top-2.5 text-gray-400">
+                        <i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 pt-24 pb-16">
+        <div class="bg-white rounded-xl shadow overflow-hidden">
+            <!-- 返回按钮 -->
+            <div class="p-6 border-b border-gray-200">
+                <a href="javascript:history.back()" class="flex items-center text-primary hover:text-primary-dark">
+                    <i class="fa fa-arrow-left mr-2"></i> 返回
+                </a>
+            </div>
+            
+            <!-- 车辆详情 -->
+            <div class="p-6">
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <!-- 车辆图片 -->
+                    <div class="lg:w-1/2">
+                        <div class="bg-gray-100 rounded-lg overflow-hidden">
+                            <img src="{{ car.image_path }}" alt="{{ car.name }}" class="w-full h-96 object-contain">
+                        </div>
+                    </div>
+                    
+                    <!-- 车辆信息 -->
+                    <div class="lg:w-1/2">
+                        <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ car.name }}</h1>
+                        
+                        <div class="mb-6">
+                            <span class="text-3xl font-bold text-primary">{{ car.price }}</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="text-gray-500 text-sm">年份</div>
+                                <div class="text-lg font-semibold">{{ car.year }}年</div>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="text-gray-500 text-sm">里程</div>
+                                <div class="text-lg font-semibold">{{ car.mileage }}</div>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="text-gray-500 text-sm">品牌</div>
+                                <div class="text-lg font-semibold">{{ car.brand }}</div>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="text-gray-500 text-sm">车型</div>
+                                <div class="text-lg font-semibold">{{ car.model }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-200 pt-6">
+                            <h2 class="text-xl font-bold mb-4">车辆描述</h2>
+                            <p class="text-gray-600">
+                                这是一辆{{ car.year }}年的{{ car.brand }}{{ car.model }}，行驶里程为{{ car.mileage }}。
+                                车辆外观保养良好，内饰整洁，无重大事故记录。各项功能正常，定期保养。
+                                感兴趣请联系我们了解更多详情!
+                            </p>
+                        </div>
+                        
+                        <div class="mt-8 flex gap-4">
+                            <button class="flex-1 bg-primary hover:bg-blue-800 text-white py-3 px-6 rounded-lg font-medium transition-colors">
+                                <i class="fa fa-phone mr-2"></i> 联系销售
+                            </button>
+                            <button class="flex-1 bg-accent hover:bg-orange-700 text-white py-3 px-6 rounded-lg font-medium transition-colors">
+                                <i class="fa fa-calendar mr-2"></i> 预约看车
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 更多详情 -->
+                <div class="mt-12 border-t border-gray-200 pt-8">
+                    <h2 class="text-2xl font-bold mb-6">更多详情</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h3 class="font-bold text-lg mb-3 flex items-center">
+                                <i class="fa fa-car text-primary mr-2"></i> 基本信息
+                            </h3>
+                            <ul class="space-y-2">
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">车辆型号</span>
+                                    <span>{{ car.model }}</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">车辆品牌</span>
+                                    <span>{{ car.brand }}</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">上牌时间</span>
+                                    <span>{{ car.year }}年</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">表显里程</span>
+                                    <span>{{ car.mileage }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h3 class="font-bold text-lg mb-3 flex items-center">
+                                <i class="fa fa-cog text-primary mr-2"></i> 配置参数
+                            </h3>
+                            <ul class="space-y-2">
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">变速箱</span>
+                                    <span>自动</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">排量</span>
+                                    <span>2.0T</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">燃油类型</span>
+                                    <span>汽油</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">驱动方式</span>
+                                    <span>前驱</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h3 class="font-bold text-lg mb-3 flex items-center">
+                                <i class="fa fa-file-text text-primary mr-2"></i> 检测报告
+                            </h3>
+                            <ul class="space-y-2">
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">外观检测</span>
+                                    <span class="text-green-600">优秀</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">内饰检测</span>
+                                    <span class="text-green-600">良好</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">发动机</span>
+                                    <span class="text-green-600">良好</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="text-gray-500">事故记录</span>
+                                    <span class="text-green-600">无</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <i class="fa fa-car text-2xl"></i>
+                    <span class="text-xl font-bold">车车车</span>
+                </div>
+                <p class="text-gray-400 mb-4">不专业的二手车交易平台</p>
+                <p class="text-gray-500 text-sm">&copy; 2025 车车车. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

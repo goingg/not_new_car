@@ -9,6 +9,8 @@ sys.path.insert(0, project_root)
 
 # 导入数据库操作模块
 from database import get_conn, read_data, get_statistics_data
+import pymysql
+import re
 
 app = Flask(__name__, static_folder='static')
 
@@ -163,6 +165,93 @@ def statistics_api():
 def custom_static(filename):
     return send_from_directory('car_img', filename)
 
+
+@app.route('/car/<int:car_id>')
+def car_detail(car_id):
+    """车辆详情页面"""
+    try:
+        conn = get_conn()
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute("""
+                SELECT id, carname, carmoney, caryear 
+                FROM carprice 
+                WHERE id = %s
+            """, (car_id,))
+            car = cursor.fetchone()
+            
+        if car:
+            # 解析车辆信息
+            parts = car['carname'].split()
+            brand = parts[0] if parts else "未知品牌"
+            model = " ".join(parts[1:]) if len(parts) > 1 else "未知型号"
+            
+            # 解析年份和里程
+            year = "未知"
+            mileage = "里程待询"
+            if car['caryear']:
+                # 清理数据中的特殊字符
+                clean_caryear = car['caryear'].replace('', '')  # 移除特殊字符
+                
+                # 提取年份
+                year_match = re.search(r'(\d{4})年', clean_caryear)
+                if year_match:
+                    year = year_match.group(1)
+                
+                # 提取里程
+                mileage_match = re.search(r'([\d.]+万?)公[里里]', clean_caryear)
+                if mileage_match:
+                    mileage = mileage_match.group(1) + "公里"
+                elif re.search(r'(\d+\.?\d*)万?公[里里]', clean_caryear):
+                    mileage_match = re.search(r'(\d+\.?\d*)万?公[里里]', clean_caryear)
+                    if mileage_match:
+                        mileage = mileage_match.group(1) + "万公里"
+                else:
+                    # 如果没有匹配到"万"字，尝试匹配普通数字
+                    mileage_match = re.search(r'(\d+\.?\d*)公[里里]', clean_caryear)
+                    if mileage_match:
+                        mileage = mileage_match.group(1) + "公里"
+            
+            # 查找对应的图片
+            car_img_dir = Path("car_img")
+            image_path = "/static/img/1.webp"  # 默认图片
+            
+            if car_img_dir.exists():
+                # 根据车辆名称匹配图片
+                car_name = car['carname']
+                image_files = list(car_img_dir.glob("*.jpg"))
+                
+                # 首先尝试精确匹配
+                for img_file in image_files:
+                    if car_name in img_file.name:
+                        image_path = f"/car_img/{img_file.name}"
+                        break
+                
+                # 如果没有精确匹配，尝试模糊匹配
+                if image_path == "/static/img/1.webp":
+                    for img_file in image_files:
+                        if car_name.split()[0] in img_file.name:
+                            image_path = f"/car_img/{img_file.name}"
+                            break
+            
+            car_data = {
+                'id': car['id'],
+                'brand': brand,
+                'model': model,
+                'name': car['carname'],
+                'price': car['carmoney'],
+                'year': year,
+                'mileage': mileage,
+                'image_path': image_path
+            }
+            
+            return render_template('car_detail.html', car=car_data)
+        else:
+            # 车辆未找到，返回404
+            return "车辆未找到", 404
+            
+    except Exception as e:
+        print(f"获取车辆详情失败: {e}")
+        return "服务器内部错误", 500
 
 if __name__ == '__main__':
     app.run(debug=True)
