@@ -36,18 +36,13 @@
                 </div>
 
                 <!-- 导航链接 -->
-                <div class="flex items-center space-x-6">
-                    <a href="/" class="nav-link text-gray-600 hover:text-primary">首页</a>
-                    <a href="/cars" class="nav-link text-gray-600 hover:text-primary">二手车</a>
-                    <a href="#" class="nav-link text-gray-600 hover:text-primary">数据分析</a>
-                </div>
-
-                <!-- 搜索框 -->
-                <div class="relative w-64">
-                    <input type="text" placeholder="搜索品牌、车型..." class="w-full py-2 pl-10 pr-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
-                    <div class="absolute left-3 top-2.5 text-gray-400">
-                        <i class="fa fa-search"></i>
-                    </div>
+                <div class="flex items-center space-x-1">
+                    <a href="/" class="nav-link active text-primary font-medium px-5 py-2 rounded-lg hover:bg-gray-100 transition-colors" data-target="home">
+                        <i class="fa fa-home mr-2"></i>首页
+                    </a>
+                    <a href="/cars" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center" data-target="cars">
+                        <i class="fa fa-car mr-2"></i>二手车
+                    </a>
                 </div>
             </div>
         </div>

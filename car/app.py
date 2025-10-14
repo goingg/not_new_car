@@ -12,6 +12,7 @@ from database import get_conn, read_data, get_statistics_data
 import pymysql
 import re
 
+
 app = Flask(__name__, static_folder='static')
 
 
@@ -246,7 +247,6 @@ def car_detail(car_id):
             
             return render_template('car_detail.html', car=car_data)
         else:
-            # 车辆未找到，返回404
             return "车辆未找到", 404
             
     except Exception as e:
