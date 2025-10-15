@@ -12,6 +12,10 @@ from database import get_conn, read_data, get_statistics_data
 import pymysql
 import re
 
+# 导入pyecharts相关模块
+from pyecharts.charts import Pie, Line
+from pyecharts import options as opts
+
 
 app = Flask(__name__, static_folder='static')
 
@@ -26,6 +30,7 @@ def get_car_data(page=1, per_page=24):
         cars, total_count = read_data(conn, page=page, per_page=per_page)
     except Exception as e:
         print(f"数据库读取失败: {e}")
+        return [], 0
 
     # 处理数据库数据（补充图片路径）
     if cars:
@@ -136,6 +141,70 @@ def car_list():
         total_pages=total_pages,
         total_count=total_count
     )
+
+
+def create_charts(stats_data):
+    """创建图表"""
+    # 品牌分布饼图
+    brand_data = stats_data.get('brand_data', [])
+    pie = None
+    if brand_data:
+        pie = (
+            Pie()
+            .add(
+                "",
+                [(item['brand'], item['count']) for item in brand_data],
+                radius=["40%", "75%"],
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(title="品牌分布"),
+                legend_opts=opts.LegendOpts(orient="vertical", pos_top="15%", pos_left="2%"),
+            )
+            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
+        )
+
+    # 价格趋势折线图
+    # 使用模拟数据，因为数据库中没有年份信息
+    line = (
+        Line()
+        .add_xaxis(['2018', '2019', '2020', '2021', '2022', '2023'])
+        .add_yaxis(
+            "平均价格 (元)",
+            [350000, 265000, 280000, 295000, 210000, int(stats_data.get('avg_price', 0))],
+            is_smooth=True,
+        )
+        .set_global_opts(
+            title_opts=opts.TitleOpts(title="二手车价格趋势"),
+            xaxis_opts=opts.AxisOpts(type_="category"),
+            yaxis_opts=opts.AxisOpts(
+                type_="value",
+                axislabel_opts=opts.LabelOpts(formatter="{value} 元"),
+            ),
+        )
+    )
+
+    return pie, line
+
+
+@app.route('/analytics')
+def analytics():
+    """数据分析页面"""
+    try:
+        conn = get_conn()
+        stats_data = get_statistics_data(conn)
+        if stats_data:
+            pie_chart, line_chart = create_charts(stats_data)
+            return render_template(
+                'analytics.html',
+                pie_chart=pie_chart.render_embed() if pie_chart else None,
+                line_chart=line_chart.render_embed(),
+                stats_data=stats_data
+            )
+        else:
+            return "无法获取统计数据", 500
+    except Exception as e:
+        print(f"获取统计数据时出错: {e}")
+        return "服务器内部错误", 500
 
 
 @app.route('/api/statistics')
@@ -252,6 +321,7 @@ def car_detail(car_id):
     except Exception as e:
         print(f"获取车辆详情失败: {e}")
         return "服务器内部错误", 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)

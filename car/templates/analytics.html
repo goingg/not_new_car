@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>数据分析 - 车车车二手车平台</title>
+    <!-- 外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E40AF',
+                        secondary: '#0EA5E9',
+                        accent: '#F97316',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-md fixed w-full z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <div class="flex items-center space-x-2">
+                    <div class="text-primary text-3xl">
+                        <i class="fa fa-car"></i>
+                    </div>
+                    <a href="/" class="text-2xl font-bold text-primary">车车车</a>
+                </div>
+
+                <!-- 导航链接 -->
+                <div class="flex items-center space-x-1">
+                    <a href="/" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-home mr-2"></i>首页
+                    </a>
+                    <a href="/cars" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center">
+                        <i class="fa fa-car mr-2"></i>二手车
+                    </a>
+                    <a href="/analytics" class="nav-link active text-primary font-medium px-5 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center">
+                        <i class="fa fa-line-chart mr-2"></i>数据分析
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 pt-24 pb-16">
+        <div class="bg-white rounded-xl shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6">二手车市场数据分析</h2>
+
+            <!-- 数据概览 -->
+            <div class="grid grid-cols-4 gap-4 mb-8" id="data-overview">
+                <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                    <h3 class="text-sm font-medium text-blue-800 mb-2">平均价格</h3>
+                    <p class="text-2xl font-bold text-blue-900">¥{{ "{:,}".format(stats_data.avg_price|int) }}</p>
+                </div>
+                <div class="bg-green-50 rounded-xl p-4 border border-green-100">
+                    <h3 class="text-sm font-medium text-green-800 mb-2">交易量</h3>
+                    <p class="text-2xl font-bold text-green-900">{{ stats_data.total_count }}</p>
+                </div>
+                <div class="bg-purple-50 rounded-xl p-4 border border-purple-100">
+                    <h3 class="text-sm font-medium text-purple-800 mb-2">平均车龄</h3>
+                    <p class="text-2xl font-bold text-purple-900">3.2年</p>
+                </div>
+                <div class="bg-orange-50 rounded-xl p-4 border border-orange-100">
+                    <h3 class="text-sm font-medium text-orange-800 mb-2">平均里程</h3>
+                    <p class="text-2xl font-bold text-orange-900">45,800公里</p>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="grid grid-cols-2 gap-8">
+                <!-- 品牌分布饼图 -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">品牌分布</h3>
+                    <div class="bg-white rounded-xl border border-gray-200 p-4">
+                        {% if pie_chart %}
+                            {{ pie_chart|safe }}
+                        {% else %}
+                            <p>暂无品牌分布数据</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- 价格趋势图 -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">二手车价格趋势</h3>
+                    <div class="bg-white rounded-xl border border-gray-200 p-4">
+                        {{ line_chart|safe }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 价格区间分布 -->
+            <div class="mt-8">
+                <h3 class="text-lg font-semibold mb-4">价格区间分布</h3>
+                <div class="grid grid-cols-5 gap-4">
+                    {% for item in stats_data.price_range_data %}
+                    <div class="bg-white rounded-xl p-4 text-center shadow">
+                        <span class="block text-lg font-bold text-primary">{{ item.price_range }}</span>
+                        <span class="text-sm text-gray-500">{{ item.count }} 辆车</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <i class="fa fa-car text-2xl"></i>
+                    <span class="text-xl font-bold">车车车</span>
+                </div>
+                <p class="text-gray-400 mb-4">不专业的二手车交易平台</p>
+                <p class="text-gray-500 text-sm">&copy; 2025 车车车. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

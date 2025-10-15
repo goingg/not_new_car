@@ -6,7 +6,6 @@
     <!-- 外部资源 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
 
     <!-- Tailwind 配置 -->
     <script>
@@ -44,7 +43,7 @@
                     <a href="/cars" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center" data-target="cars">
                         <i class="fa fa-car mr-2"></i>二手车
                     </a>
-                    <a href="#" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center" data-target="analytics">
+                    <a href="/analytics" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center" data-target="analytics">
                         <i class="fa fa-line-chart mr-2"></i>数据分析
                     </a>
                 </div>
@@ -67,9 +66,9 @@
                                 <a href="/cars" class="nav-link bg-white text-primary px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors flex items-center" data-target="cars">
                                     <i class="fa fa-search mr-2"></i> 查看全部
                                 </a>
-                                <button class="nav-link bg-accent text-white px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors flex items-center" data-target="analytics">
+                                <a href="/analytics" class="nav-link bg-accent text-white px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors flex items-center" data-target="analytics">
                                     <i class="fa fa-line-chart mr-2"></i> 数据分析
-                                </button>
+                                </a>
                             </div>
                         </div>
                         <div class="w-1/2 h-auto relative">
@@ -200,41 +199,6 @@
                     </div>
                 </div>
             </section>
-
-            <!-- 数据分析页 -->
-            <section id="analytics" class="page-section hidden">
-                <div class="bg-white rounded-xl shadow p-6 mb-8">
-                    <h2 class="text-2xl font-bold mb-6">二手车市场数据分析</h2>
-
-                    <!-- 数据概览 -->
-                    <div class="grid grid-cols-4 gap-4 mb-8" id="data-overview">
-                        <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                            <h3 class="text-sm font-medium text-blue-800 mb-2">平均价格</h3>
-                            <p class="text-2xl font-bold text-blue-900" id="avg-price">¥--</p>
-                        </div>
-                        <div class="bg-green-50 rounded-xl p-4 border border-green-100">
-                            <h3 class="text-sm font-medium text-green-800 mb-2">交易量</h3>
-                            <p class="text-2xl font-bold text-green-900" id="total-count">--</p>
-                        </div>
-                        <div class="bg-purple-50 rounded-xl p-4 border border-purple-100">
-                            <h3 class="text-sm font-medium text-purple-800 mb-2">平均车龄</h3>
-                            <p class="text-2xl font-bold text-purple-900">3.2年</p>
-                        </div>
-                        <div class="bg-orange-50 rounded-xl p-4 border border-orange-100">
-                            <h3 class="text-sm font-medium text-orange-800 mb-2">平均里程</h3>
-                            <p class="text-2xl font-bold text-orange-900">45,800公里</p>
-                        </div>
-                    </div>
-
-                    <!-- 价格趋势图 -->
-                    <div class="mb-8">
-                        <h3 class="text-lg font-semibold mb-4">二手车价格趋势</h3>
-                        <div class="bg-white rounded-xl border border-gray-200 p-4 h-64">
-                            <canvas id="priceTrendChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </section>
         </div>
     </main>
 
@@ -278,20 +242,6 @@
                     
                     pageSections.forEach(section => section.classList.add('hidden'));
                     document.getElementById('cars').classList.remove('hidden');
-                } else if (path === '/analytics') {
-                    // 显示数据分析页面
-                    navLinks.forEach(link => {
-                        link.classList.remove('active', 'text-primary', 'bg-gray-100');
-                        link.classList.add('text-gray-600');
-                    });
-                    document.querySelectorAll('[data-target="analytics"]').forEach(link => {
-                        link.classList.add('active', 'text-primary', 'bg-gray-100');
-                        link.classList.remove('text-gray-600');
-                    });
-                    
-                    pageSections.forEach(section => section.classList.add('hidden'));
-                    document.getElementById('analytics').classList.remove('hidden');
-                    initCharts();
                 } else {
                     // 显示首页
                     navLinks.forEach(link => {
@@ -315,7 +265,7 @@
                 link.addEventListener('click', function(e) {
                     // 对于外部链接（如/cars），不需要阻止默认行为
                     const target = this.getAttribute('data-target');
-                    if (target) {
+                    if (target && target !== 'analytics') {
                         e.preventDefault();
                         // 更新导航状态
                         navLinks.forEach(link => {
@@ -331,11 +281,6 @@
                         pageSections.forEach(section => section.classList.add('hidden'));
                         document.getElementById(target).classList.remove('hidden');
 
-                        // 初始化图表
-                        if (target === 'analytics') {
-                            initCharts();
-                        }
-                        
                         // 更新URL但不刷新页面
                         const url = target === 'home' ? '/' : `/${target}`;
                         history.pushState({page: target}, '', url);
@@ -347,84 +292,6 @@
             window.addEventListener('popstate', function(event) {
                 showPageBasedOnURL();
             });
-
-            // 初始化图表
-            function initCharts() {
-                // 获取真实数据
-                fetch('/api/statistics')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const statsData = data.data;
-                            
-                            // 更新数据概览
-                            document.getElementById('avg-price').textContent = '¥' + Math.round(statsData.avg_price).toLocaleString();
-                            document.getElementById('total-count').textContent = statsData.total_count.toLocaleString();
-                            
-                            // 价格趋势图（这里使用模拟数据，因为数据库中没有年份信息）
-                            const priceCtx = document.getElementById('priceTrendChart').getContext('2d');
-                            // 清除之前的图表实例（如果存在）
-                            if (window.priceChart) {
-                                window.priceChart.destroy();
-                            }
-                            window.priceChart = new Chart(priceCtx, {
-                                type: 'line',
-                                data: {
-                                    labels: ['2018', '2019', '2020', '2021', '2022', '2023'],
-                                    datasets: [{
-                                        label: '平均价格 (元)',
-                                        data: [350000, 265000, 280000, 295000, 210000, Math.round(statsData.avg_price)],
-                                        borderColor: '#1E40AF',
-                                        backgroundColor: 'rgba(30, 64, 175, 0.1)',
-                                        fill: true,
-                                        tension: 0.3
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false
-                                }
-                            });
-                            
-                            // 清除之前的图表实例（如果存在）
-                            if (window.brandChart) {
-                                window.brandChart.destroy();
-                            }
-                            window.brandChart = new Chart(brandCtx, {
-                                type: 'pie',
-                                data: {
-                                    labels: brandLabels,
-                                    datasets: [{
-                                        data: brandCounts,
-                                        backgroundColor: [
-                                            '#1E40AF', '#0EA5E9', '#F97316',
-                                            '#EC4899', '#A855F7', '#64748B'
-                                        ]
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: { position: 'right' }
-                                    }
-                                }
-                            });
-                            
-                            // 更新价格区间数据
-                            const priceRangeData = statsData.price_range_data;
-                            for (let i = 0; i < priceRangeData.length && i < 5; i++) {
-                                const element = document.getElementById(`price-range-${i+1}`);
-                                if (element) {
-                                    element.textContent = `${priceRangeData[i].count} 辆车`;
-                                }
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error('获取统计数据失败:', error);
-                    });
-            }
         });
     </script>
 </body>

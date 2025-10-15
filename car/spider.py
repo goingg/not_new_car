@@ -88,10 +88,6 @@ def car(page=1):
         time.sleep(0.3)  # 控制爬取频率，避免被反爬
 
 
-def detail_page():
-    pass
-
-
 if __name__ == "__main__":
     # 主线程初始化数据表（只执行一次）
     try:
