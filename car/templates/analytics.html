@@ -81,9 +81,11 @@
                 <!-- 品牌分布饼图 -->
                 <div>
                     <h3 class="text-lg font-semibold mb-4">品牌分布</h3>
-                    <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <div class="bg-white rounded-xl border border-gray-200 p-4 h-80 flex items-center justify-center">
                         {% if pie_chart %}
-                            {{ pie_chart|safe }}
+                            <div class="w-full h-full">
+                                {{ pie_chart|safe }}
+                            </div>
                         {% else %}
                             <p>暂无品牌分布数据</p>
                         {% endif %}
@@ -93,8 +95,10 @@
                 <!-- 价格趋势图 -->
                 <div>
                     <h3 class="text-lg font-semibold mb-4">二手车价格趋势</h3>
-                    <div class="bg-white rounded-xl border border-gray-200 p-4">
-                        {{ line_chart|safe }}
+                    <div class="bg-white rounded-xl border border-gray-200 p-4 h-80 flex items-center justify-center">
+                        <div class="w-full h-full">
+                            {{ line_chart|safe }}
+                        </div>
                     </div>
                 </div>
             </div>

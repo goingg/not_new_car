@@ -145,12 +145,16 @@ def car_list():
 
 def create_charts(stats_data):
     """创建图表"""
+    # 图表初始化参数
+    init_opts = opts.InitOpts(width="100%", height="100%", 
+                             renderer="canvas")
+    
     # 品牌分布饼图
     brand_data = stats_data.get('brand_data', [])
     pie = None
     if brand_data:
         pie = (
-            Pie()
+            Pie(init_opts=init_opts)
             .add(
                 "",
                 [(item['brand'], item['count']) for item in brand_data],
@@ -166,7 +170,7 @@ def create_charts(stats_data):
     # 价格趋势折线图
     # 使用模拟数据，因为数据库中没有年份信息
     line = (
-        Line()
+        Line(init_opts=init_opts)
         .add_xaxis(['2018', '2019', '2020', '2021', '2022', '2023'])
         .add_yaxis(
             "平均价格 (元)",
@@ -180,6 +184,9 @@ def create_charts(stats_data):
                 type_="value",
                 axislabel_opts=opts.LabelOpts(formatter="{value} 元"),
             ),
+        )
+        .set_series_opts(
+            label_opts=opts.LabelOpts(is_show=False)
         )
     )
 
