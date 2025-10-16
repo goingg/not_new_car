@@ -1,8 +1,7 @@
-qiniu
 flask
 requests
 bs4
 pymysql
 pyecharts
 lxml
-
+qiniu
