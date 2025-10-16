@@ -85,13 +85,12 @@ def get_car_data(page=1, per_page=24):
                     car_key = f"{brand}_{model}"
                     if car_key not in processed_names:
                         # 生成图片路径
-                        safe_name = sanitize_filename(car_name)
                         img_index = name_parts[-1]
                         all_cars.append({
                             'brand': brand,
                             'model': model,
                             'year': year,
-                            'image_path': get_image_path(safe_name, img_index),
+                            'image_path': get_image_path(safe_name(car_name), img_index),
                             'price': "价格待询",
                             'mileage': "里程待询"
                         })
