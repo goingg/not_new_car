@@ -36,7 +36,8 @@ def safe_name(name):
 
 def get_image_path(carname, index, ext='.jpg'):
     sname = safe_name(carname)
-    encoded_name = urllib.parse.quote(f"{sname}_{index}{ext}")
+    # 修复：所有本地图片都以 _1.jpg 结尾，而不是使用 car_id 作为索引
+    encoded_name = urllib.parse.quote(f"{sname}_1{ext}")
     url = f"{QINIU_DOMAIN}/car_images/{encoded_name}"
     # 生成带token的私有下载链接（有效期1小时）
     private_url = q.private_download_url(url, expires=3600)
@@ -57,8 +58,8 @@ def get_car_data(page=1, per_page=24):
 
     # 处理数据库数据（补充图片路径）
     if cars:
-        for i, car in enumerate(cars):
-            car['image_path'] = get_image_path(car['name'], i + 1)
+        for car in cars:
+            car['image_path'] = get_image_path(car['name'], car['id'])
             car['year'] = car.get('year', "未知")
             car['mileage'] = car.get('mileage', "里程待询")
         return cars, total_count
@@ -257,7 +258,7 @@ def car_detail(car_id):
             """, (car_id,))
             car = cursor.fetchone()
         if car:
-            image_path = get_image_path(car['carname'], 1)
+            image_path = get_image_path(car['carname'], car['id'])
             # 解析年份和里程
             year = "未知"
             mileage = "里程待询"
