@@ -118,13 +118,6 @@ def car(page=1):
             print(f"[UPL_ERR] {file_path.name} -> 七牛云失败: {e}")
 
 
-# 清空bucket所有文件
-def clear_bucket():
-    bucket_files = bucket.list(bucket_name)[0].get('items', [])
-    for item in bucket_files:
-        bucket.delete(bucket_name, item['key'])
-
-
 
 if __name__ == "__main__":
     # 主线程初始化数据表（只执行一次）

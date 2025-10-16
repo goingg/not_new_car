@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, send_from_directory, jsonify
 import os
 from pathlib import Path
 import sys
-import requests  # 新增：用于检查图片是否存在
 import urllib.parse
 import qiniu
 
@@ -259,14 +258,31 @@ def car_detail(car_id):
             car = cursor.fetchone()
         if car:
             image_path = get_image_path(car['carname'], 1)
+            # 解析年份和里程
+            year = "未知"
+            mileage = "里程待询"
+            caryear_str = car.get('caryear', "")
+            if caryear_str:
+                # 提取年份（如 2014年、2022年）
+                year_match = re.search(r'(\d{4})年', caryear_str)
+                if year_match:
+                    year = year_match.group(1)
+                # 提取里程（如 3.1万公里、41700公里）
+                mileage_match = re.search(r'([\d.]+万?)公里', caryear_str)
+                if mileage_match:
+                    mileage = mileage_match.group(1) + "公里"
+                else:
+                    mileage_match = re.search(r'([\d,]+)公里', caryear_str)
+                    if mileage_match:
+                        mileage = mileage_match.group(1).replace(",", "") + "公里"
             car_data = {
                 'id': car['id'],
                 'brand': car['carname'].split()[0] if car['carname'] else "未知品牌",
                 'model': " ".join(car['carname'].split()[1:]) if car['carname'] else "未知型号",
                 'name': car['carname'],
                 'price': car['carmoney'],
-                'year': car.get('caryear', "未知"),
-                'mileage': "里程待询",
+                'year': year,
+                'mileage': mileage,
                 'image_path': image_path
             }
             return render_template('car_detail.html', car=car_data)
