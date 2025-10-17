@@ -22,113 +22,20 @@
         }
     </script>
     <style>
-        /* 轮播图样式 */
-        .carousel {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        
-        .carousel-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-        
-        .carousel-item {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
-        
-        .carousel-item.active {
-            opacity: 1;
-        }
-        
-        .carousel-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .carousel-control {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-            z-index: 10;
-            transition: background 0.3s;
-        }
-        
-        .carousel-control:hover {
-            background: rgba(0, 0, 0, 0.7);
-        }
-        
-        .carousel-control.prev {
-            left: 10px;
-        }
-        
-        .carousel-control.next {
-            right: 10px;
-        }
-        
-        .carousel-indicators {
-            position: absolute;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-            z-index: 10;
-        }
-        
-        .indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .indicator.active {
-            background: white;
-        }
-        
-        .carousel-caption {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            padding: 15px;
-            text-align: center;
-        }
-        
         /* 英雄区域响应式高度 */
         .hero-container {
-            height: 500px;
+            height: 433px;
         }
         
         @media (min-width: 768px) {
             .hero-container {
-                height: 500px;
+                height: 433px;
             }
         }
         
         @media (min-width: 1024px) {
             .hero-container {
-                height: 500px;
+                height: 433px;
             }
         }
     </style>
@@ -184,34 +91,7 @@
                         </div>
                         <div class="w-full md:w-1/2 relative">
                             <!-- 轮播图 -->
-                            <div class="carousel h-full">
-                                <div class="carousel-inner">
-                                    {% for car in recommended_cars %}
-                                        {% if loop.index <= 4 %}
-                                        <div class="carousel-item {% if loop.first %}active{% endif %}">
-                                            <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="carousel-img">
-<!--                                            <div class="carousel-caption">-->
-<!--                                                <h3>{{ car.brand }} {{ car.model }}</h3>-->
-<!--                                                <p>{{ car.year }}年 · {{ car.mileage }} · {{ car.price }}</p>-->
-<!--                                            </div>-->
-                                        </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                                <button class="carousel-control prev">
-                                    <i class="fa fa-chevron-left"></i>
-                                </button>
-                                <button class="carousel-control next">
-                                    <i class="fa fa-chevron-right"></i>
-                                </button>
-                                <div class="carousel-indicators">
-                                    {% for car in recommended_cars %}
-                                        {% if loop.index <= 4 %}
-                                        <div class="indicator {% if loop.first %}active{% endif %}" data-slide="{{ loop.index0 }}"></div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            </div>
+                            <img src="/static/images/hero_car.png" alt="热门推荐轮播" class="w-full h-full object-cover">
                         </div>
                     </div>
                 </div>
@@ -220,6 +100,9 @@
                 <div class="mb-10">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold">热门推荐</h2>
+                        <button id="refresh-recommendations" class="text-primary font-medium hover:underline flex items-center">
+                            换一批 <i class="fa fa-refresh ml-1"></i>
+                        </button>
                     </div>
                     <div class="grid grid-cols-4 gap-6" id="recommended-cars">
                         <!-- 加载状态 -->
@@ -254,27 +137,25 @@
                         <!-- 价格区间 -->
                         <div class="mb-8">
                             <h2 class="text-2xl font-bold mb-6">按价格筛选</h2>
-                            <div class="grid grid-cols-5 gap-4">
-                                <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
-                                    <span class="block text-lg font-bold text-primary">10万以下</span>
-                                    <span class="text-sm text-gray-500" id="price-range-1">经济实惠</span>
-                                </button>
-                                <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
-                                    <span class="block text-lg font-bold text-primary">10-20万</span>
-                                    <span class="text-sm text-gray-500" id="price-range-2">家用首选</span>
-                                </button>
-                                <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
-                                    <span class="block text-lg font-bold text-primary">20-30万</span>
-                                    <span class="text-sm text-gray-500" id="price-range-3">品质之选</span>
-                                </button>
-                                <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
-                                    <span class="block text-lg font-bold text-primary">30-50万</span>
-                                    <span class="text-sm text-gray-500" id="price-range-4">豪华舒适</span>
-                                </button>
-                                <button class="price-filter bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition-shadow">
-                                    <span class="block text-lg font-bold text-primary">50万以上</span>
-                                    <span class="text-sm text-gray-500" id="price-range-5">高端定制</span>
-                                </button>
+                            <div class="flex flex-wrap gap-2">
+                                <a href="?price_category=all" class="px-4 py-2 rounded-lg {% if current_category|default('all') == 'all' %}bg-primary text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} transition-colors">
+                                    全部车辆
+                                </a>
+                                <a href="?price_category=经济实惠" class="px-4 py-2 rounded-lg {% if current_category|default('all') == '经济实惠' %}bg-primary text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} transition-colors">
+                                    经济实惠 (0-10万)
+                                </a>
+                                <a href="?price_category=家用首选" class="px-4 py-2 rounded-lg {% if current_category|default('all') == '家用首选' %}bg-primary text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} transition-colors">
+                                    家用首选 (10-20万)
+                                </a>
+                                <a href="?price_category=品质之选" class="px-4 py-2 rounded-lg {% if current_category|default('all') == '品质之选' %}bg-primary text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} transition-colors">
+                                    品质之选 (20-30万)
+                                </a>
+                                <a href="?price_category=豪华舒适" class="px-4 py-2 rounded-lg {% if current_category|default('all') == '豪华舒适' %}bg-primary text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} transition-colors">
+                                    豪华舒适 (30-50万)
+                                </a>
+                                <a href="?price_category=高端定制" class="px-4 py-2 rounded-lg {% if current_category|default('all') == '高端定制' %}bg-primary text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} transition-colors">
+                                    高端定制 (50万以上)
+                                </a>
                             </div>
                         </div>
 
@@ -287,6 +168,8 @@
                                     <h3 class="text-lg font-bold">{{ car.brand }} {{ car.model }}</h3>
                                     <div class="text-gray-500 text-sm mb-2">{{ car.year }}年 · {{ car.mileage }}</div>
                                     <div class="text-primary font-bold">{{ car.price }}</div>
+                                    {% if car.price_label %}
+                                    {% endif %}
                                 </div>
                             </a>
                             {% else %}
@@ -305,7 +188,7 @@
                         <div class="flex justify-center mt-8">
                             <nav class="flex items-center space-x-1">
                                 {% if current_page > 1 %}
-                                <a href="?page={{ current_page - 1 }}" class="px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50">
+                                <a href="?page={{ current_page - 1 }}{% if current_category|default('all') != 'all' %}&price_category={{ current_category }}{% endif %}" class="px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50">
                                     <i class="fa fa-angle-left"></i>
                                 </a>
                                 {% else %}
@@ -316,14 +199,14 @@
 
                                 {% for page_num in range([1, current_page-2]|max, [total_pages+1, current_page+3]|min) %}
                                     {% if page_num == current_page %}
-                                    <a href="?page={{ page_num }}" class="px-3 py-2 rounded bg-primary text-white">{{ page_num }}</a>
+                                    <a href="?page={{ page_num }}{% if current_category|default('all') != 'all' %}&price_category={{ current_category }}{% endif %}" class="px-3 py-2 rounded bg-primary text-white">{{ page_num }}</a>
                                     {% else %}
-                                    <a href="?page={{ page_num }}" class="px-3 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">{{ page_num }}</a>
+                                    <a href="?page={{ page_num }}{% if current_category|default('all') != 'all' %}&price_category={{ current_category }}{% endif %}" class="px-3 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">{{ page_num }}</a>
                                     {% endif %}
                                 {% endfor %}
 
                                 {% if current_page < total_pages %}
-                                <a href="?page={{ current_page + 1 }}" class="px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50">
+                                <a href="?page={{ current_page + 1 }}{% if current_category|default('all') != 'all' %}&price_category={{ current_category }}{% endif %}" class="px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-50">
                                     <i class="fa fa-angle-right"></i>
                                 </a>
                                 {% else %}
@@ -429,67 +312,72 @@
             window.addEventListener('popstate', function(event) {
                 showPageBasedOnURL();
             });
+
+            // 处理价格分类链接的特殊逻辑
+            const priceCategoryLinks = document.querySelectorAll('a[href^="?price_category="]');
+            priceCategoryLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = new URL(this.href, window.location);
+                    window.location.href = url.toString();
+                });
+            });
             
-            // 轮播图功能
-            const carousel = {
-                currentIndex: 0,
-                items: document.querySelectorAll('.carousel-item'),
-                indicators: document.querySelectorAll('.indicator'),
-                prevBtn: document.querySelector('.carousel-control.prev'),
-                nextBtn: document.querySelector('.carousel-control.next'),
-                
-                init() {
-                    // 只有当存在轮播项时才初始化
-                    if (this.items.length === 0) return;
+            // 添加换一批功能
+            const refreshButton = document.getElementById('refresh-recommendations');
+            if (refreshButton) {
+                refreshButton.addEventListener('click', function() {
+                    // 显示加载状态
+                    const recommendedCarsContainer = document.getElementById('recommended-cars');
+                    recommendedCarsContainer.innerHTML = '';
+                    for (let i = 0; i < 8; i++) {
+                        const loadingCard = document.createElement('div');
+                        loadingCard.className = 'animate-pulse bg-white rounded-xl overflow-hidden shadow';
+                        loadingCard.innerHTML = `
+                            <div class="bg-gray-200 h-48"></div>
+                            <div class="p-4">
+                                <div class="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                <div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                                <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+                            </div>
+                        `;
+                        recommendedCarsContainer.appendChild(loadingCard);
+                    }
                     
-                    // 绑定事件
-                    this.prevBtn.addEventListener('click', () => this.prev());
-                    this.nextBtn.addEventListener('click', () => this.next());
-                    
-                    // 绑定指示器事件
-                    this.indicators.forEach((indicator, index) => {
-                        indicator.addEventListener('click', () => this.goTo(index));
-                    });
-                    
-                    // 自动播放
-                    this.autoPlay();
-                },
-                
-                show(index) {
-                    // 隐藏所有项
-                    this.items.forEach(item => item.classList.remove('active'));
-                    this.indicators.forEach(indicator => indicator.classList.remove('active'));
-                    
-                    // 显示当前项
-                    this.items[index].classList.add('active');
-                    this.indicators[index].classList.add('active');
-                    
-                    this.currentIndex = index;
-                },
-                
-                next() {
-                    const nextIndex = (this.currentIndex + 1) % this.items.length;
-                    this.show(nextIndex);
-                },
-                
-                prev() {
-                    const prevIndex = (this.currentIndex - 1 + this.items.length) % this.items.length;
-                    this.show(prevIndex);
-                },
-                
-                goTo(index) {
-                    this.show(index);
-                },
-                
-                autoPlay() {
-                    setInterval(() => {
-                        this.next();
-                    }, 5000); // 每5秒切换一次
-                }
-            };
-            
-            // 初始化轮播图
-            carousel.init();
+                    // 发送AJAX请求获取新的推荐车辆
+                    fetch('/api/refresh_recommendations')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // 更新推荐车辆显示
+                                recommendedCarsContainer.innerHTML = '';
+                                data.cars.forEach(car => {
+                                    const carCard = document.createElement('a');
+                                    carCard.href = `/car/${car.id}`;
+                                    carCard.className = 'bg-white rounded-xl overflow-hidden shadow hover:shadow-md transition-shadow block';
+                                    carCard.innerHTML = `
+                                        <img src="${car.image_path}" alt="${car.brand} ${car.model}" class="w-full h-48 object-cover">
+                                        <div class="p-4">
+                                            <h3 class="text-lg font-bold">${car.brand} ${car.model}</h3>
+                                            <div class="text-gray-500 text-sm mb-2">${car.year}年 · ${car.mileage}</div>
+                                            <div class="text-primary font-bold">${car.price}</div>
+                                        </div>
+                                    `;
+                                    recommendedCarsContainer.appendChild(carCard);
+                                });
+                            } else {
+                                console.error('获取推荐车辆失败:', data.message);
+                                // 恢复原始内容
+                                location.reload();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('获取推荐车辆时出错:', error);
+                            // 恢复原始内容
+                            location.reload();
+                        });
+                });
+            }
         });
     </script>
 </body>

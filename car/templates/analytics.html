@@ -68,11 +68,11 @@
                 </div>
                 <div class="bg-purple-50 rounded-xl p-4 border border-purple-100">
                     <h3 class="text-sm font-medium text-purple-800 mb-2">平均车龄</h3>
-                    <p class="text-2xl font-bold text-purple-900">3.2年</p>
+                    <p class="text-2xl font-bold text-purple-900">{{ "%.1f"|format(stats_data.avg_year) }}年</p>
                 </div>
                 <div class="bg-orange-50 rounded-xl p-4 border border-orange-100">
                     <h3 class="text-sm font-medium text-orange-800 mb-2">平均里程</h3>
-                    <p class="text-2xl font-bold text-orange-900">45,800公里</p>
+                    <p class="text-2xl font-bold text-orange-900">{{ "{:,.0f}".format(stats_data.avg_mileage) }}公里</p>
                 </div>
             </div>
 

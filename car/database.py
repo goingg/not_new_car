@@ -210,11 +210,38 @@ def get_statistics_data(conn):
             cursor.execute("SELECT COUNT(*) as total_count FROM carprice")
             total_count = cursor.fetchone()['total_count']
 
+            # 平均车龄（从caryear字段中提取年份信息计算）
+            cursor.execute("""
+                SELECT AVG(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(caryear, '年份： ', -1), '年', 1) AS UNSIGNED)) as avg_year
+                FROM carprice
+                WHERE caryear LIKE '%年份： %年%'
+            """)
+            avg_year_result = cursor.fetchone()
+            avg_year = avg_year_result['avg_year'] if avg_year_result['avg_year'] else 0
+
+            # 平均里程（从caryear字段中提取公里数信息计算）
+            cursor.execute("""
+                SELECT AVG(
+                    CASE 
+                        WHEN caryear LIKE '%万公里%' THEN 
+                            CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(caryear, '公里：', -1), '万公里', 1), '万', '') AS DECIMAL(10,2)) * 10000
+                        WHEN caryear LIKE '%公里%' THEN 
+                            CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(caryear, '公里：', -1), '公里', 1), ',', '') AS UNSIGNED)
+                    END
+                ) as avg_mileage
+                FROM carprice
+                WHERE caryear LIKE '%公里：%%公里%'
+            """)
+            avg_mileage_result = cursor.fetchone()
+            avg_mileage = avg_mileage_result['avg_mileage'] if avg_mileage_result['avg_mileage'] else 0
+
             return {
                 'brand_data': brand_data,
                 'price_range_data': price_range_data,
                 'avg_price': round(avg_price * 10000, 2) if avg_price else 0,  # 转换为元
-                'total_count': total_count
+                'total_count': total_count,
+                'avg_year': round(2025 - avg_year, 1) if avg_year > 0 else 0,  # 转换为车龄（假设当前年份为2025）
+                'avg_mileage': round(avg_mileage, 0) if avg_mileage > 0 else 0  # 转换为整数公里数
             }
     except Exception as e:
         print(f"读取统计数据失败: {e}")

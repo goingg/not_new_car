@@ -1,11 +1,11 @@
-import os
-import time
-import requests
-import threading
 from bs4 import BeautifulSoup
 from pathlib import Path
-import sys
+import threading
+import requests
 import qiniu
+import time
+import sys
+import os
 
 # 添加项目根目录到Python路径
 project_root = os.path.join(os.path.dirname(__file__), '..')

@@ -1,6 +1,79 @@
 import requests
 from bs4 import BeautifulSoup
 import html
+import sys
+import pymysql
+from car.database import get_conn
+
+conn = get_conn()
+with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+    cursor.execute('SELECT caryear FROM carprice LIMIT 10')
+    results = cursor.fetchall()
+    print('caryear示例数据:')
+    for row in results:
+        print(row)
+        
+    # 检查年份提取
+    cursor.execute("""
+        SELECT 
+            caryear,
+            SUBSTRING_INDEX(SUBSTRING_INDEX(caryear, '年份： ', -1), '年', 1) as extracted_year
+        FROM carprice
+        WHERE caryear LIKE '%年份： %年%'
+        LIMIT 5
+    """)
+    year_results = cursor.fetchall()
+    print("\n年份提取结果:")
+    for row in year_results:
+        print(row)
+    
+    # 检查里程提取
+    cursor.execute("""
+        SELECT 
+            caryear,
+            CASE 
+                WHEN caryear LIKE '%万公里%' THEN 
+                    CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(caryear, '公里：', -1), '万公里', 1), '万', '') AS DECIMAL(10,2)) * 10000
+                WHEN caryear LIKE '%公里%' THEN 
+                    CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(caryear, '公里：', -1), '公里', 1), ',', '') AS UNSIGNED)
+            END as extracted_mileage
+        FROM carprice
+        WHERE caryear LIKE '%公里：%%公里%'
+        LIMIT 5
+    """)
+    mileage_results = cursor.fetchall()
+    print("\n里程提取结果:")
+    for row in mileage_results:
+        print(row)
+    
+    # 检查平均年份查询
+    cursor.execute("""
+        SELECT AVG(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(caryear, '年份： ', -1), '年', 1) AS UNSIGNED)) as avg_year
+        FROM carprice
+        WHERE caryear LIKE '%年份： %年%'
+    """)
+    avg_year_result = cursor.fetchone()
+    print("\n平均年份查询结果:")
+    print(avg_year_result)
+    
+    # 检查平均里程查询
+    cursor.execute("""
+        SELECT AVG(
+            CASE 
+                WHEN caryear LIKE '%万公里%' THEN 
+                    CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(caryear, '公里：', -1), '万公里', 1), '万', '') AS DECIMAL(10,2)) * 10000
+                WHEN caryear LIKE '%公里%' THEN 
+                    CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(caryear, '公里：', -1), '公里', 1), ',', '') AS UNSIGNED)
+            END
+        ) as avg_mileage
+        FROM carprice
+        WHERE caryear LIKE '%公里：%%公里%'
+    """)
+    avg_mileage_result = cursor.fetchone()
+    print("\n平均里程查询结果:")
+    print(avg_mileage_result)
+    
+conn.close()
 
 page_url = "https://car.autohome.com.cn/2sc/china/a0_0msdgscncgpi1ltocsp1ex/"
 headers = {

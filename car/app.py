@@ -1,26 +1,23 @@
-from flask import Flask, render_template, request, send_from_directory, jsonify
-import os
+from database import get_conn, read_data, get_statistics_data
+from flask import Flask, render_template, request, jsonify
+from pyecharts.charts import Pie, Line
+from pyecharts import options as opts
 from pathlib import Path
-import sys
 import urllib.parse
+import pymysql
 import qiniu
+import sys
+import os
+import re
 
 # 配置项目路径
 project_root = os.path.join(os.path.dirname(__file__))
 sys.path.insert(0, project_root)
 
-# 导入数据库操作模块
-from database import get_conn, read_data, get_statistics_data
-import pymysql
-import re
-
-# 导入pyecharts相关模块
-from pyecharts.charts import Pie, Line
-from pyecharts import options as opts
 
 app = Flask(__name__, static_folder='static')
 
-# 七牛云图片域名（确保末尾无斜杠）
+# 七牛云域名
 QINIU_DOMAIN = 'http://t460o974c.hb-bkt.clouddn.com'
 
 LOCAL_IMG_DIR = 'car_img'
@@ -35,16 +32,16 @@ def safe_name(name):
 
 
 def get_ai_recommended_cars(conn, top_n=8):
-    # 示例：按价格、年份、品牌等简单规则推荐
+    # 按价格、年份、品牌等简单规则推荐
     with conn.cursor(pymysql.cursors.DictCursor) as cursor:
         cursor.execute("""
             SELECT id, carname, carmoney, caryear
             FROM carprice
-            ORDER BY RAND()  -- 随机推荐，可替换为更智能的排序
+            ORDER BY RAND()  -- 随机推荐
             LIMIT %s
         """, (top_n,))
         results = cursor.fetchall()
-        # 解析数据（可复用 read_data 的解析逻辑）
+        # 解析数据
         cars = []
         for row in results:
             parts = row['carname'].split()
@@ -103,10 +100,11 @@ def get_car_data(page=1, per_page=24):
         print(f"数据库读取失败: {e}")
         return [], 0
 
-    # 处理数据库数据（补充图片路径）
+    # 处理数据库数据
     if cars:
         for i, car in enumerate(cars):
-            car['image_path'] = get_image_path(car['name'], i + 1)
+            # 修改图片路径生成方式，使用固定索引1，与首页保持一致
+            car['image_path'] = get_image_path(car['name'], 1)
             car['year'] = car.get('year', "未知")
             car['mileage'] = car.get('mileage', "里程待询")
         return cars, total_count
@@ -131,13 +129,12 @@ def get_car_data(page=1, per_page=24):
                     year = parts[-1] if (parts[-1].isdigit() and len(parts[-1]) == 4) else "未知"
                     car_key = f"{brand}_{model}"
                     if car_key not in processed_names:
-                        # 生成图片路径
-                        img_index = name_parts[-1]
+                        # 生成图片路径，使用固定索引1，与首页保持一致
                         all_cars.append({
                             'brand': brand,
                             'model': model,
                             'year': year,
-                            'image_path': get_image_path(safe_name(car_name), img_index),
+                            'image_path': get_image_path(safe_name(car_name), 1),
                             'price': "价格待询",
                             'mileage': "里程待询"
                         })
@@ -162,7 +159,7 @@ def index():
     # 计算总页数（向上取整）
     total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
 
-    # AI推荐热门车辆
+    # 智能推荐热门车辆
     conn = get_conn()
     recommended_cars = get_ai_recommended_cars(conn, top_n=8)
 
@@ -183,8 +180,85 @@ def car_list():
     page = request.args.get('page', 1, type=int)
     per_page = 24  # 每页固定24辆
 
-    # 获取分页数据和总记录数
-    current_cars, total_count = get_car_data(page=page, per_page=per_page)
+    # 获取价格分类参数
+    price_category = request.args.get('price_category', 'all')
+
+    # 根据价格分类获取车辆
+    def get_cars_by_price_category_local(category: str = 'all'):
+        """
+        根据价格分类获取车辆的本地实现
+        """
+        # 获取所有车辆数据
+        all_cars, _ = get_car_data(page=1, per_page=10000)  # 获取所有车辆
+
+        # 如果是获取所有车辆，直接返回
+        if category == 'all':
+            # 为所有车辆添加价格标签
+            for car in all_cars:
+                # 使用本地的价格转换和分类函数
+                price_value = _to_float_local(car['price'])
+                price_label = _label_local(price_value)
+                car['price_label'] = price_label
+            return all_cars
+
+        # 筛选特定分类的车辆
+        classified_cars = []
+        for car in all_cars:
+            # 使用本地的价格转换和分类函数
+            price_value = _to_float_local(car['price'])
+            price_label = _label_local(price_value)
+
+            # 如果分类匹配，则添加到结果中
+            if price_label == category:
+                car['price_label'] = price_label
+                classified_cars.append(car)
+
+        return classified_cars
+
+    # 本地实现的工具函数
+    def _to_float_local(carmoney: str):
+        """
+        把原始价格字符串转成浮点数
+        """
+        try:
+            return float(carmoney.replace("￥", "").replace("万", "").replace("", ""))
+        except Exception:
+            return -1.0
+
+    def _label_local(price: float):
+        """
+        根据价格返回对应标签
+        这个函数将车辆价格转换为用户友好的价格区间标签，用于在前端界面显示。
+        价格区间配置：左闭右开，单位"万元"
+        Args:
+            price: 车辆价格（以万元为单位）
+        Returns:
+            str: 对应的价格区间标签，如"经济实惠"、"家用首选"等
+        """
+        # 价格区间配置：左闭右开，单位"万元"
+        PRICE_SEG_LOCAL = [
+            (0, 10, "经济实惠"),
+            (10, 20, "家用首选"),
+            (20, 30, "品质之选"),
+            (30, 50, "豪华舒适"),
+            (50, float('inf'), "高端定制")
+        ]
+
+        if price < 0:
+            return "价格异常"
+        for low, high, tag in PRICE_SEG_LOCAL:
+            if low <= price < high:
+                return tag
+        # 兜底（理论上不会走到）
+        return "价格异常"
+
+    # 调用本地函数
+    all_cars = get_cars_by_price_category_local(price_category)
+
+    # 对筛选后的数据进行手动分页
+    total_count = len(all_cars)
+    offset = (page - 1) * per_page
+    current_cars = all_cars[offset:offset + per_page]
 
     # 计算总页数（向上取整）
     total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
@@ -194,8 +268,58 @@ def car_list():
         cars=current_cars,
         current_page=page,
         total_pages=total_pages,
-        total_count=total_count
+        total_count=total_count,
+        current_category=price_category
     )
+
+
+def create_charts(stats_data):
+    """创建图表"""
+    # 图表初始化参数
+    init_opts = opts.InitOpts(width="100%", height="100%",
+                              renderer="canvas")
+
+    # 品牌分布饼图
+    brand_data = stats_data.get('brand_data', [])
+    pie = None
+    if brand_data:
+        pie = (
+            Pie(init_opts=init_opts)
+            .add(
+                "",
+                [(item['brand'], item['count']) for item in brand_data],
+                radius=["40%", "75%"],
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(title="品牌分布"),
+                legend_opts=opts.LegendOpts(orient="vertical", pos_top="15%", pos_left="2%"),
+            )
+            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
+        )
+
+    # 价格趋势折线图
+    line = (
+        Line(init_opts=init_opts)
+        .add_xaxis(['2018', '2019', '2020', '2021', '2022', '2023'])
+        .add_yaxis(
+            "平均价格 (元)",
+            [550000, 265000, 680000, 295000, 531000, int(stats_data.get('avg_price', 0))],
+            is_smooth=True,
+        )
+        .set_global_opts(
+            title_opts=opts.TitleOpts(title="二手车价格趋势"),
+            xaxis_opts=opts.AxisOpts(type_="category"),
+            yaxis_opts=opts.AxisOpts(
+                type_="value",
+                axislabel_opts=opts.LabelOpts(formatter="{value} 元"),
+            ),
+        )
+        .set_series_opts(
+            label_opts=opts.LabelOpts(is_show=False)
+        )
+    )
+
+    return pie, line
 
 
 def create_charts(stats_data):
@@ -290,13 +414,6 @@ def statistics_api():
             'message': f'获取统计数据时出错: {str(e)}'
         })
 
-
-# 提供本地图片访问
-@app.route(f'/{LOCAL_IMG_DIR}/<path:filename>')
-def custom_static(filename):
-    return send_from_directory(LOCAL_IMG_DIR, filename)
-
-
 @app.route('/car/<int:car_id>')
 def car_detail(car_id):
     """车辆详情页面（修复图片路径）"""
@@ -344,6 +461,39 @@ def car_detail(car_id):
     except Exception as e:
         print(f"获取车辆详情失败: {e}")
         return "服务器内部错误", 500
+
+
+@app.route('/api/refresh_recommendations')
+def refresh_recommendations():
+    """API接口：获取新的推荐车辆"""
+    try:
+        conn = get_conn()
+        recommended_cars = get_ai_recommended_cars(conn, top_n=8)
+        conn.close()
+        
+        # 转换为可JSON序列化的格式
+        cars_data = []
+        for car in recommended_cars:
+            cars_data.append({
+                'id': car['id'],
+                'brand': car['brand'],
+                'model': car['model'],
+                'price': car['price'],
+                'year': car['year'],
+                'mileage': car['mileage'],
+                'image_path': car['image_path']
+            })
+        
+        return jsonify({
+            'success': True,
+            'cars': cars_data
+        })
+    except Exception as e:
+        print(f"获取推荐车辆时出错: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'获取推荐车辆时出错: {str(e)}'
+        }), 500
 
 
 if __name__ == '__main__':
