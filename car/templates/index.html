@@ -21,6 +21,117 @@
             }
         }
     </script>
+    <style>
+        /* 轮播图样式 */
+        .carousel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .carousel-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .carousel-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        .carousel-item.active {
+            opacity: 1;
+        }
+        
+        .carousel-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .carousel-control {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 10;
+            transition: background 0.3s;
+        }
+        
+        .carousel-control:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        
+        .carousel-control.prev {
+            left: 10px;
+        }
+        
+        .carousel-control.next {
+            right: 10px;
+        }
+        
+        .carousel-indicators {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+        
+        .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .indicator.active {
+            background: white;
+        }
+        
+        .carousel-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        /* 英雄区域响应式高度 */
+        .hero-container {
+            height: 500px;
+        }
+        
+        @media (min-width: 768px) {
+            .hero-container {
+                height: 500px;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .hero-container {
+                height: 500px;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <!-- 导航栏 -->
@@ -58,10 +169,10 @@
             <section id="home" class="page-section active">
                 <!-- 英雄区域 -->
                 <div class="bg-gradient-to-r from-primary to-secondary rounded-2xl overflow-hidden shadow-xl mb-10">
-                    <div class="flex">
-                        <div class="w-1/2 p-12 flex flex-col justify-center text-white">
-                            <h1 class="text-4xl font-bold mb-4">找不到你的理想二手车</h1>
-                            <p class="text-lg mb-6 opacity-90">海量车源，透明车况，不专业检测</p>
+                    <div class="flex flex-col md:flex-row hero-container">
+                        <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center text-white">
+                            <h1 class="text-3xl md:text-4xl font-bold mb-4">找不到你的理想二手车</h1>
+                            <p class="text-base md:text-lg mb-6 opacity-90">海量车源，透明车况，不专业检测</p>
                             <div class="flex flex-wrap gap-3">
                                 <a href="/cars" class="nav-link bg-white text-primary px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors flex items-center" data-target="cars">
                                     <i class="fa fa-search mr-2"></i> 查看全部
@@ -71,8 +182,36 @@
                                 </a>
                             </div>
                         </div>
-                        <div class="w-1/2 h-auto relative">
-                            <img src="https://picsum.photos/id/111/800/500" alt="二手车展示" class="absolute inset-0 w-full h-full object-cover">
+                        <div class="w-full md:w-1/2 relative">
+                            <!-- 轮播图 -->
+                            <div class="carousel h-full">
+                                <div class="carousel-inner">
+                                    {% for car in recommended_cars %}
+                                        {% if loop.index <= 4 %}
+                                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                            <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="carousel-img">
+<!--                                            <div class="carousel-caption">-->
+<!--                                                <h3>{{ car.brand }} {{ car.model }}</h3>-->
+<!--                                                <p>{{ car.year }}年 · {{ car.mileage }} · {{ car.price }}</p>-->
+<!--                                            </div>-->
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <button class="carousel-control prev">
+                                    <i class="fa fa-chevron-left"></i>
+                                </button>
+                                <button class="carousel-control next">
+                                    <i class="fa fa-chevron-right"></i>
+                                </button>
+                                <div class="carousel-indicators">
+                                    {% for car in recommended_cars %}
+                                        {% if loop.index <= 4 %}
+                                        <div class="indicator {% if loop.first %}active{% endif %}" data-slide="{{ loop.index0 }}"></div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -290,6 +429,67 @@
             window.addEventListener('popstate', function(event) {
                 showPageBasedOnURL();
             });
+            
+            // 轮播图功能
+            const carousel = {
+                currentIndex: 0,
+                items: document.querySelectorAll('.carousel-item'),
+                indicators: document.querySelectorAll('.indicator'),
+                prevBtn: document.querySelector('.carousel-control.prev'),
+                nextBtn: document.querySelector('.carousel-control.next'),
+                
+                init() {
+                    // 只有当存在轮播项时才初始化
+                    if (this.items.length === 0) return;
+                    
+                    // 绑定事件
+                    this.prevBtn.addEventListener('click', () => this.prev());
+                    this.nextBtn.addEventListener('click', () => this.next());
+                    
+                    // 绑定指示器事件
+                    this.indicators.forEach((indicator, index) => {
+                        indicator.addEventListener('click', () => this.goTo(index));
+                    });
+                    
+                    // 自动播放
+                    this.autoPlay();
+                },
+                
+                show(index) {
+                    // 隐藏所有项
+                    this.items.forEach(item => item.classList.remove('active'));
+                    this.indicators.forEach(indicator => indicator.classList.remove('active'));
+                    
+                    // 显示当前项
+                    this.items[index].classList.add('active');
+                    this.indicators[index].classList.add('active');
+                    
+                    this.currentIndex = index;
+                },
+                
+                next() {
+                    const nextIndex = (this.currentIndex + 1) % this.items.length;
+                    this.show(nextIndex);
+                },
+                
+                prev() {
+                    const prevIndex = (this.currentIndex - 1 + this.items.length) % this.items.length;
+                    this.show(prevIndex);
+                },
+                
+                goTo(index) {
+                    this.show(index);
+                },
+                
+                autoPlay() {
+                    setInterval(() => {
+                        this.next();
+                    }, 5000); // 每5秒切换一次
+                }
+            };
+            
+            // 初始化轮播图
+            carousel.init();
         });
     </script>
 </body>
