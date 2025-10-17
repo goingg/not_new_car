@@ -84,8 +84,7 @@
                     </div>
                     <div class="grid grid-cols-4 gap-6" id="recommended-cars">
                         <!-- 加载状态 -->
-                        {% for car in cars %}
-                        {% if loop.index <= 8 %}  <!-- 限制首页只显示前8辆车（两行） -->
+                        {% for car in recommended_cars %}
                         <a href="/car/{{ car.id }}" class="bg-white rounded-xl overflow-hidden shadow hover:shadow-md transition-shadow block">
                             <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-48 object-cover">
                             <div class="p-4">
@@ -94,7 +93,6 @@
                                 <div class="text-primary font-bold">{{ car.price }}</div>
                             </div>
                         </a>
-                        {% endif %}
                         {% else %}
                         <div class="animate-pulse bg-white rounded-xl overflow-hidden shadow">
                             <div class="bg-gray-200 h-48"></div>

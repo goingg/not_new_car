@@ -34,10 +34,57 @@ def safe_name(name):
     return "".join(c if c.isalnum() or c in "._- " else "_" for c in name)
 
 
+def get_ai_recommended_cars(conn, top_n=8):
+    # 示例：按价格、年份、品牌等简单规则推荐
+    with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+        cursor.execute("""
+            SELECT id, carname, carmoney, caryear
+            FROM carprice
+            ORDER BY RAND()  -- 随机推荐，可替换为更智能的排序
+            LIMIT %s
+        """, (top_n,))
+        results = cursor.fetchall()
+        # 解析数据（可复用 read_data 的解析逻辑）
+        cars = []
+        for row in results:
+            parts = row['carname'].split()
+            brand = parts[0] if parts else "未知品牌"
+            model = " ".join(parts[1:]) if len(parts) > 1 else "未知型号"
+            year = "未知"
+            mileage = "里程待询"
+            if row['caryear']:
+                clean_caryear = row['caryear'].replace('', '')  # 移除特殊字符
+                year_match = re.search(r'(\d{4})年', clean_caryear)
+                if year_match:
+                    year = year_match.group(1)
+                mileage_match = re.search(r'([\d.]+万?)公里', clean_caryear)
+                if mileage_match:
+                    mileage = mileage_match.group(1) + "公里"
+                elif re.search(r'(\d+\.?\d*)万?公[里里]', clean_caryear):
+                    mileage_match = re.search(r'(\d+\.?\d*)万?公[里里]', clean_caryear)
+                    if mileage_match:
+                        mileage = mileage_match.group(1) + "万公里"
+                else:
+                    # 如果没有匹配到"万"字，尝试匹配普通数字
+                    mileage_match = re.search(r'(\d+\.?\d*)公[里里]', clean_caryear)
+                    if mileage_match:
+                        mileage = mileage_match.group(1) + "公里"
+            cars.append({
+                'id': row['id'],
+                'brand': brand,
+                'model': model,
+                'price': row['carmoney'],
+                'name': row['carname'],
+                'year': year,
+                'mileage': mileage,
+                'image_path': get_image_path(row['carname'], 1)  # 使用固定索引1，与爬虫逻辑保持一致
+            })
+        return cars
+
+
 def get_image_path(carname, index, ext='.jpg'):
     sname = safe_name(carname)
-    # 修复：所有本地图片都以 _1.jpg 结尾，而不是使用 car_id 作为索引
-    encoded_name = urllib.parse.quote(f"{sname}_1{ext}")
+    encoded_name = urllib.parse.quote(f"{sname}_{index}{ext}")
     url = f"{QINIU_DOMAIN}/car_images/{encoded_name}"
     # 生成带token的私有下载链接（有效期1小时）
     private_url = q.private_download_url(url, expires=3600)
@@ -58,8 +105,8 @@ def get_car_data(page=1, per_page=24):
 
     # 处理数据库数据（补充图片路径）
     if cars:
-        for car in cars:
-            car['image_path'] = get_image_path(car['name'], car['id'])
+        for i, car in enumerate(cars):
+            car['image_path'] = get_image_path(car['name'], i + 1)
             car['year'] = car.get('year', "未知")
             car['mileage'] = car.get('mileage', "里程待询")
         return cars, total_count
@@ -115,9 +162,14 @@ def index():
     # 计算总页数（向上取整）
     total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
 
+    # AI推荐热门车辆
+    conn = get_conn()
+    recommended_cars = get_ai_recommended_cars(conn, top_n=8)
+
     return render_template(
         'index.html',
         cars=current_cars,
+        recommended_cars=recommended_cars,  # 首页推荐车辆
         current_page=page,
         total_pages=total_pages,
         total_count=total_count
@@ -258,7 +310,7 @@ def car_detail(car_id):
             """, (car_id,))
             car = cursor.fetchone()
         if car:
-            image_path = get_image_path(car['carname'], car['id'])
+            image_path = get_image_path(car['carname'], 1)
             # 解析年份和里程
             year = "未知"
             mileage = "里程待询"
