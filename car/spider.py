@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 from pathlib import Path
 import threading
 import requests
-import qiniu
 import time
 import sys
 import os
@@ -13,25 +12,11 @@ sys.path.insert(0, project_root)
 
 # 从项目根目录导入数据库模块
 from database import get_conn, save_data, init_table
-
-
-# 七牛云密钥和bucket配置
-access_key = 'j_afhONjyWahQI0k4bGme1tGMr-W-AXKvTAGvk1J'
-secret_key = '7LcJJ2DV7VP6iY991evMgRIvlzn2prdmuwjr69lz'
-bucket_name = 'notnew-car'
-
-# 七牛云初始化
-q = qiniu.Auth(access_key, secret_key)
-bucket = qiniu.BucketManager(q)
-
-
-# 统一safe_name处理
-def safe_name(name):
-    return "".join(c if c.isalnum() or c in "._- " else "_" for c in name)
+from utils import safe_name, q, BUCKET_NAME
 
 
 def upload_to_bucket(local_path, key):
-    token = q.upload_token(bucket_name, key)
+    token = q.upload_token(BUCKET_NAME, key)
     ret, info = qiniu.put_file(token, key, local_path)
     return info.status_code == 200
 

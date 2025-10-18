@@ -1,14 +1,15 @@
-from database import get_conn, read_data, get_statistics_data
+from database import get_conn, read_data
 from flask import Flask, render_template, request, jsonify
 from pyecharts.charts import Pie, Line
 from pyecharts import options as opts
 from pathlib import Path
 import urllib.parse
 import pymysql
-import qiniu
 import sys
 import os
 import re
+from utils import safe_name, q, QINIU_DOMAIN
+from statistics import get_statistics_data
 
 # 配置项目路径
 project_root = os.path.join(os.path.dirname(__file__))
@@ -17,18 +18,8 @@ sys.path.insert(0, project_root)
 
 app = Flask(__name__, static_folder='static')
 
-# 七牛云域名
-QINIU_DOMAIN = 'http://t460o974c.hb-bkt.clouddn.com'
-
 LOCAL_IMG_DIR = 'car_img'
 
-access_key = 'j_afhONjyWahQI0k4bGme1tGMr-W-AXKvTAGvk1J'
-secret_key = '7LcJJ2DV7VP6iY991evMgRIvlzn2prdmuwjr69lz'
-q = qiniu.Auth(access_key, secret_key)
-
-
-def safe_name(name):
-    return "".join(c if c.isalnum() or c in "._- " else "_" for c in name)
 
 
 def get_ai_recommended_cars(conn, top_n=8):

@@ -90,8 +90,52 @@
                             </div>
                         </div>
                         <div class="w-full md:w-1/2 relative">
-                            <!-- 轮播图 -->
-                            <img src="/static/images/hero_car.png" alt="热门推荐轮播" class="w-full h-full object-cover">
+                            <!-- 热门推荐轮播图 -->
+                            <div id="hero-carousel" class="relative w-full h-full">
+                                {% for car in recommended_cars %}
+                                <div class="carousel-item absolute inset-0 transition-opacity duration-700 {% if loop.index0 == 0 %}opacity-100 z-10{% else %}opacity-0 z-0{% endif %}">
+                                    <a href="/car/{{ car.id }}" class="block w-full h-full">
+                                        <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-full object-cover rounded-xl">
+                                        <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-4">
+                                            <div class="text-lg font-bold">{{ car.brand }} {{ car.model }}</div>
+                                            <div class="text-sm">{{ car.year }}年 · {{ car.mileage }}</div>
+                                            <div class="text-accent font-bold">{{ car.price }}</div>
+                                        </div>
+                                    </a>
+                                </div>
+                                {% endfor %}
+                                <!-- 左右切换按钮 -->
+                                <button id="carousel-prev" type="button" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white bg-opacity-70 rounded-full p-2 shadow hover:bg-opacity-100 z-20">
+                                    <i class="fa fa-chevron-left text-primary"></i>
+                                </button>
+                                <button id="carousel-next" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white bg-opacity-70 rounded-full p-2 shadow hover:bg-opacity-100 z-20">
+                                    <i class="fa fa-chevron-right text-primary"></i>
+                                </button>
+                            </div>
+                            <script>
+                            // 简单轮播逻辑
+                            const items = document.querySelectorAll('#hero-carousel .carousel-item');
+                            let current = 0;
+                            function show(idx) {
+                                items.forEach((el, i) => {
+                                    el.classList.toggle('opacity-100', i === idx);
+                                    el.classList.toggle('z-10', i === idx);
+                                    el.classList.toggle('opacity-0', i !== idx);
+                                    el.classList.toggle('z-0', i !== idx);
+                                });
+                            }
+                            function next() {
+                                current = (current + 1) % items.length;
+                                show(current);
+                            }
+                            function prev() {
+                                current = (current - 1 + items.length) % items.length;
+                                show(current);
+                            }
+                            document.getElementById('carousel-next').onclick = next;
+                            document.getElementById('carousel-prev').onclick = prev;
+                            setInterval(next, 4000); // 自动轮播
+                            </script>
                         </div>
                     </div>
                 </div>
@@ -382,4 +426,3 @@
     </script>
 </body>
 </html>
-
