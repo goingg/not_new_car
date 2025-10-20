@@ -5,6 +5,7 @@ import requests
 import time
 import sys
 import os
+import qiniu
 
 # 添加项目根目录到Python路径
 project_root = os.path.join(os.path.dirname(__file__), '..')
