@@ -1,5 +1,5 @@
-from database import get_conn, read_data
-from flask import Flask, render_template, request, jsonify
+from database import get_conn, read_data, verify_user, create_user, check_username_exists
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
 from pyecharts.charts import Pie, Line
 from pyecharts import options as opts
 from pathlib import Path
@@ -10,6 +10,7 @@ import os
 import re
 from utils import safe_name, q, QINIU_DOMAIN
 from statistics import get_statistics_data
+from functools import wraps
 
 # 配置项目路径
 project_root = os.path.join(os.path.dirname(__file__))
@@ -17,9 +18,19 @@ sys.path.insert(0, project_root)
 
 
 app = Flask(__name__, static_folder='static')
+app.secret_key = 'your_secret_key_here'  # 用于会话加密
 
 LOCAL_IMG_DIR = 'car_img'
 
+
+def login_required(f):
+    """装饰器：检查用户是否已登录"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 def get_ai_recommended_cars(conn, top_n=8):
@@ -164,6 +175,83 @@ def index():
     )
 
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        # 数据库验证用户
+        try:
+            conn = get_conn()
+            user = verify_user(conn, username, password)
+            conn.close()
+            
+            if user:
+                # 登录成功，设置会话
+                session['user'] = user
+                return redirect(url_for('index'))
+            else:
+                # 登录失败，返回错误信息
+                return render_template('login.html', error='用户名或密码错误')
+        except Exception as e:
+            print(f"登录时出错: {e}")
+            return render_template('login.html', error='登录过程中发生错误')
+    
+    # GET 请求显示登录页面
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    # 清除会话
+    session.pop('user', None)
+    return redirect(url_for('index'))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        
+        # 验证输入
+        if not username or not password:
+            return render_template('register.html', error='用户名和密码不能为空')
+        
+        if password != confirm_password:
+            return render_template('register.html', error='密码和确认密码不匹配')
+        
+        if len(password) < 6:
+            return render_template('register.html', error='密码长度至少为6位')
+        
+        try:
+            conn = get_conn()
+            
+            # 检查用户名是否已存在
+            if check_username_exists(conn, username):
+                conn.close()
+                return render_template('register.html', error='用户名已存在')
+            
+            # 创建新用户
+            user_id = create_user(conn, username, password)
+            conn.close()
+            
+            if user_id:
+                # 注册成功，重定向到登录页面
+                return redirect(url_for('login', success='注册成功，请登录'))
+            else:
+                return render_template('register.html', error='注册失败，请稍后重试')
+                
+        except Exception as e:
+            print(f"注册时出错: {e}")
+            return render_template('register.html', error='注册过程中发生错误')
+    
+    # GET 请求显示注册页面
+    return render_template('register.html')
+
+
 # 二手车列表页面路由
 @app.route('/cars')
 def car_list():
@@ -294,55 +382,6 @@ def create_charts(stats_data):
         .add_xaxis(['2018', '2019', '2020', '2021', '2022', '2023'])
         .add_yaxis(
             "平均价格 (元)",
-            [550000, 265000, 680000, 295000, 531000, int(stats_data.get('avg_price', 0))],
-            is_smooth=True,
-        )
-        .set_global_opts(
-            title_opts=opts.TitleOpts(title="二手车价格趋势"),
-            xaxis_opts=opts.AxisOpts(type_="category"),
-            yaxis_opts=opts.AxisOpts(
-                type_="value",
-                axislabel_opts=opts.LabelOpts(formatter="{value} 元"),
-            ),
-        )
-        .set_series_opts(
-            label_opts=opts.LabelOpts(is_show=False)
-        )
-    )
-
-    return pie, line
-
-
-def create_charts(stats_data):
-    """创建图表"""
-    # 图表初始化参数
-    init_opts = opts.InitOpts(width="100%", height="100%",
-                              renderer="canvas")
-
-    # 品牌分布饼图
-    brand_data = stats_data.get('brand_data', [])
-    pie = None
-    if brand_data:
-        pie = (
-            Pie(init_opts=init_opts)
-            .add(
-                "",
-                [(item['brand'], item['count']) for item in brand_data],
-                radius=["40%", "75%"],
-            )
-            .set_global_opts(
-                title_opts=opts.TitleOpts(title="品牌分布"),
-                legend_opts=opts.LegendOpts(orient="vertical", pos_top="15%", pos_left="2%"),
-            )
-            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
-        )
-
-    # 价格趋势折线图
-    line = (
-        Line(init_opts=init_opts)
-        .add_xaxis(['2018', '2019', '2020', '2021', '2022', '2023'])
-        .add_yaxis(
-            "平均价格 (元)",
             [350000, 265000, 280000, 295000, 210000, int(stats_data.get('avg_price', 0))],
             is_smooth=True,
         )
@@ -363,6 +402,7 @@ def create_charts(stats_data):
 
 
 @app.route('/analytics')
+@login_required
 def analytics():
     """数据分析页面"""
     try:
@@ -384,6 +424,7 @@ def analytics():
 
 
 @app.route('/api/statistics')
+@login_required
 def statistics_api():
     """提供统计数据的API接口"""
     try:
@@ -404,6 +445,7 @@ def statistics_api():
             'success': False,
             'message': f'获取统计数据时出错: {str(e)}'
         })
+
 
 @app.route('/car/<int:car_id>')
 def car_detail(car_id):

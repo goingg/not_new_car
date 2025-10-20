@@ -4,7 +4,7 @@ import re
 
 def get_conn(db_name='car'):
     """获取数据库连接，不存在则创建数据库"""
-    def user():
+    try:
         return pymysql.connect(
             host='localhost',
             port=3306,
@@ -14,20 +14,27 @@ def get_conn(db_name='car'):
             charset='utf8mb4',
             connect_timeout=10
         )
-
-    def connect():
-        return user()
-
-    try:
-        return connect()
     except pymysql.err.OperationalError as e:
         if "Unknown database" in str(e):
-            # 先连接默认数据库创建新库
-            temp_conn = user()
-            create_database(temp_conn, db_name)
-            temp_conn.close()
-            return connect()
+            try:
+                # 先连接默认数据库创建新库
+                temp_conn = pymysql.connect(
+                    host='localhost',
+                    port=3306,
+                    user='root',
+                    passwd='1234',
+                    charset='utf8mb4',
+                    connect_timeout=10
+                )
+                create_database(temp_conn, db_name)
+                temp_conn.close()
+                # 再次尝试连接
+                return get_conn(db_name)
+            except pymysql.err.OperationalError as conn_err:
+                print(f"数据库连接失败: {conn_err}")
+                raise conn_err
         else:
+            print(f"数据库操作错误: {e}")
             raise e
 
 
@@ -57,6 +64,24 @@ def init_table(conn):
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """
             cursor.execute(create_sql)
+            
+            # 创建用户表
+            create_user_table_sql = """
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """
+            cursor.execute(create_user_table_sql)
+            
+            # 插入默认管理员用户 (用户名: admin, 密码: password)
+            insert_default_user_sql = """
+            INSERT IGNORE INTO users (username, password) VALUES ('admin', 'password')
+            """
+            cursor.execute(insert_default_user_sql)
+            
             conn.commit()
             print("数据表初始化成功")
     except Exception as e:
@@ -154,3 +179,47 @@ def read_data(conn, page=1, per_page=24):
         conn.close()
     return cars, total_count
 
+
+def verify_user(conn, username, password):
+    """验证用户凭据"""
+    try:
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute("""
+                SELECT id, username FROM users 
+                WHERE username = %s AND password = %s
+            """, (username, password))
+            user = cursor.fetchone()
+            return user
+    except Exception as e:
+        print(f"验证用户时出错: {e}")
+        return None
+
+
+def create_user(conn, username, password):
+    """创建新用户"""
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO users (username, password) 
+                VALUES (%s, %s)
+            """, (username, password))
+            conn.commit()
+            return cursor.lastrowid
+    except Exception as e:
+        print(f"创建用户时出错: {e}")
+        conn.rollback()
+        return None
+
+
+def check_username_exists(conn, username):
+    """检查用户名是否已存在"""
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT id FROM users WHERE username = %s
+            """, (username,))
+            result = cursor.fetchone()
+            return result is not None
+    except Exception as e:
+        print(f"检查用户名时出错: {e}")
+        return False

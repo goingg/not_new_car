@@ -46,6 +46,26 @@
                     <a href="/analytics" class="nav-link active text-primary font-medium px-5 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center">
                         <i class="fa fa-line-chart mr-2"></i>数据分析
                     </a>
+                    {% if session.user %}
+                    <div class="relative">
+                        <button id="user-menu-button" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center">
+                            <i class="fa fa-user mr-2"></i>{{ session.user.username }}
+                            <i class="fa fa-caret-down ml-1"></i>
+                        </button>
+                        <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden z-50">
+                            <a href="/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fa fa-sign-out mr-2"></i>退出登录
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <a href="/login" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center">
+                        <i class="fa fa-sign-in mr-2"></i>登录
+                    </a>
+                    <a href="/register" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center">
+                        <i class="fa fa-user-plus mr-2"></i>注册
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -213,5 +233,28 @@
             </div>
         </div>
     </footer>
+    
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 处理用户菜单显示/隐藏
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userMenu = document.getElementById('user-menu');
+            
+            if (userMenuButton && userMenu) {
+                userMenuButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userMenu.classList.toggle('hidden');
+                });
+                
+                // 点击页面其他地方隐藏菜单
+                document.addEventListener('click', function(e) {
+                    if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                        userMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
