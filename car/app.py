@@ -91,7 +91,7 @@ def get_image_path(carname, index, ext='.jpg'):
 
 
 def get_car_data(page=1, per_page=24):
-    """获取分页的汽车数据（修复图片路径）"""
+    """获取分页的汽车数据"""
     cars = []
     total_count = 0  # 总记录数
     try:
@@ -110,43 +110,6 @@ def get_car_data(page=1, per_page=24):
             car['year'] = car.get('year', "未知")
             car['mileage'] = car.get('mileage', "里程待询")
         return cars, total_count
-
-    # 数据库无数据时，从本地图片解析
-    car_img_dir = Path(LOCAL_IMG_DIR)
-    all_cars = []
-    if car_img_dir.exists():
-        image_files = list(car_img_dir.glob("*.jpg"))[:2000]  # 限制最大数量
-        processed_names = set()
-        for img_file in image_files:
-            filename = img_file.stem
-            # 解析文件名（兼容爬虫生成的格式）
-            name_parts = filename.split('_')
-            if len(name_parts) >= 2 and name_parts[-1].isdigit():
-                # 提取车辆名称（去除索引部分）
-                car_name = '_'.join(name_parts[:-1])
-                parts = car_name.split()
-                if len(parts) >= 2:
-                    brand = parts[0]
-                    model = ' '.join(parts[1:-1]) if len(parts) > 2 else parts[1]
-                    year = parts[-1] if (parts[-1].isdigit() and len(parts[-1]) == 4) else "未知"
-                    car_key = f"{brand}_{model}"
-                    if car_key not in processed_names:
-                        # 生成图片路径，使用固定索引1，与首页保持一致
-                        all_cars.append({
-                            'brand': brand,
-                            'model': model,
-                            'year': year,
-                            'image_path': get_image_path(safe_name(car_name), 1),
-                            'price': "价格待询",
-                            'mileage': "里程待询"
-                        })
-                        processed_names.add(car_key)
-
-    # 手动分页处理
-    total_count = len(all_cars)
-    offset = (page - 1) * per_page
-    current_cars = all_cars[offset:offset + per_page]
-    return current_cars, total_count
 
 
 @app.route('/')

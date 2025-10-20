@@ -347,7 +347,12 @@
 
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
-                    // 对于外部链接（如/cars），不需要阻止默认行为
+                    // 对于首页链接，允许默认行为（页面跳转）
+                    if (this.getAttribute('href') === '/') {
+                        return;
+                    }
+                    
+                    // 对于其他带data-target的内部链接，使用JavaScript切换
                     const target = this.getAttribute('data-target');
                     if (target && target !== 'analytics') {
                         e.preventDefault();

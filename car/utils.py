@@ -13,4 +13,3 @@ q = qiniu.Auth(ACCESS_KEY, SECRET_KEY)
 def safe_name(name):
     """统一处理文件名安全字符"""
     return "".join(c if c.isalnum() or c in "._- " else "_" for c in name)
-

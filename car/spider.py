@@ -6,6 +6,9 @@ import time
 import sys
 import os
 import qiniu
+import re
+import html
+import pymysql
 
 # 添加项目根目录到Python路径
 project_root = os.path.join(os.path.dirname(__file__), '..')
@@ -14,12 +17,75 @@ sys.path.insert(0, project_root)
 # 从项目根目录导入数据库模块
 from database import get_conn, save_data, init_table
 from utils import safe_name, q, BUCKET_NAME
+import pymysql
+
+# 配置请求会话，增加重试机制和超时设置
+session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(max_retries=3)
+session.mount('http://', adapter)
+session.mount('https://', adapter)
 
 
 def upload_to_bucket(local_path, key):
-    token = q.upload_token(BUCKET_NAME, key)
-    ret, info = qiniu.put_file(token, key, local_path)
-    return info.status_code == 200
+    # 检查文件是否存在
+    if not os.path.exists(local_path):
+        print(f"[UPL_ERR] 文件不存在: {local_path}")
+        return False
+        
+    try:
+        token = q.upload_token(BUCKET_NAME, key)
+        ret, info = qiniu.put_file(token, key, local_path)
+        return info.status_code == 200
+    except Exception as e:
+        print(f"[UPL_ERR] {os.path.basename(local_path)} -> 七牛云失败: {e}")
+        return False
+
+
+def get_car_detail(detail_url, headers):
+    """获取车辆详细信息"""
+    try:
+        res = session.get(detail_url, headers=headers, timeout=(5, 10))
+        res.encoding = res.apparent_encoding
+        soup = BeautifulSoup(res.text, 'lxml')
+        
+        # 提取详细信息
+        details = {}
+        
+        # 定义需要提取的字段列表 (字段名, 页面显示名称)
+        fields_to_extract = [
+            ('register_time', '上牌时间'),
+            ('mileage', '表显里程'),
+            ('gearbox', '变速箱'),
+            ('emission_standard', '排放标准'),
+            ('displacement', '排量'),
+            ('release_time', '发布时间'),
+            ('inspection_due', '年检到期'),
+            ('insurance_due', '保险到期'),
+            ('warranty_due', '质保到期'),
+            ('transfer_count', '过户次数'),
+            ('location', '所在地'),
+            ('engine', '发动机'),
+            ('car_level', '车辆级别'),
+            ('body_color', '车身颜色'),
+            ('fuel_grade', '燃油标号'),
+            ('drive_mode', '驱动方式')
+        ]
+        
+        # 循环提取各个字段
+        for field_name, display_name in fields_to_extract:
+            elem = soup.select_one(f'.basic-item-ul li:has(span.item-name:contains("{display_name}"))')
+            if elem:
+                item_name = elem.select_one('.item-name')
+                if item_name:
+                    details[field_name] = html.unescape(
+                        elem.get_text(strip=True).replace(
+                            item_name.get_text(strip=True), '')
+                    )
+        
+        return details
+    except Exception as e:
+        print(f"获取车辆详细信息失败: {e}")
+        return {}
 
 
 def car(page=1):
@@ -32,7 +98,7 @@ def car(page=1):
     save_dir = Path("car_img")
     save_dir.mkdir(exist_ok=True)
     try:
-        res = requests.get(url, headers=headers, timeout=10)
+        res = session.get(url, headers=headers, timeout=(5, 10))
         res.encoding = res.apparent_encoding
     except Exception as e:
         print(f"页面请求失败（页码：{page}）: {e}")
@@ -66,9 +132,6 @@ def car(page=1):
     img_tags = soup.find_all('img', attrs={'name': 'LazyloadImg'})
     images = [(img['src2'], img['title']) for img in img_tags if 'src2' in img.attrs]
 
-    session = requests.Session()
-    session.headers.update(headers)
-
     title_count = {}
     for idx, (link, title) in enumerate(images, 1):
         # 补全协议
@@ -86,45 +149,116 @@ def car(page=1):
         file_path = save_dir / f"{sname}_{img_index}{ext}"
 
         try:
-            resp = session.get(link, timeout=15)
+            resp = session.get(link, timeout=(5, 15))
             resp.raise_for_status()
             file_path.write_bytes(resp.content)
             print(f"[OK]  {idx:02d}/{len(images)}  {file_path.name}")
         except Exception as e:
             print(f"[ERR] {idx:02d}/{len(images)}  {link}  ->  {e}")
+            continue
 
         time.sleep(0.3)  # 控制爬取频率，避免被反爬
 
         # 保存图片到七牛云
         try:
             img_key = f"car_images/{sname}_{img_index}{ext}"
-            upload_to_bucket(str(file_path), img_key)
-            print(f"[UPL] {file_path.name} -> 七牛云成功")
+            if upload_to_bucket(str(file_path), img_key):
+                print(f"[UPL] {file_path.name} -> 七牛云成功")
         except Exception as e:
             print(f"[UPL_ERR] {file_path.name} -> 七牛云失败: {e}")
 
 
-
-if __name__ == "__main__":
-    # 主线程初始化数据表（只执行一次）
+def reset_database():
+    """重置数据库：删除现有数据库并重新创建"""
     try:
+        # 连接到默认数据库（不指定db_name）
+        temp_conn = pymysql.connect(
+            host='localhost',
+            port=3306,
+            user='root',
+            passwd='1234',
+            charset='utf8mb4',
+            connect_timeout=10
+        )
+        
+        # 删除现有数据库
+        drop_database(temp_conn, 'car')
+        
+        # 创建新数据库
+        create_database(temp_conn, 'car')
+        temp_conn.close()
+        
+        # 初始化表结构
         conn = get_conn()
         init_table(conn)
         conn.close()
-        print("数据表初始化完成")
+        
+        print("数据库重置完成")
+        return True
     except Exception as e:
-        print(f"初始化表失败: {e}")
-        sys.exit(1)
+        print(f"数据库重置失败: {e}")
+        return False
 
+
+def drop_database(conn, db_name):
+    """删除数据库"""
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(f"DROP DATABASE IF EXISTS {db_name}")
+            conn.commit()
+            print(f"数据库 {db_name} 删除成功")
+    except Exception as e:
+        print(f"删除数据库失败: {e}")
+        conn.rollback()
+
+
+def create_database(conn, db_name):
+    """创建数据库"""
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name} CHARACTER SET utf8mb4")
+            conn.commit()
+            print(f"数据库 {db_name} 创建成功")
+    except Exception as e:
+        print(f"创建数据库失败: {e}")
+        conn.rollback()
+
+
+if __name__ == "__main__":
+    # 重置数据库
+    print("正在重置数据库...")
+    if not reset_database():
+        print("数据库重置失败，程序退出")
+        sys.exit(1)
+    
+    # 清空图片目录
+    save_dir = Path("car_img")
+    if save_dir.exists():
+        import shutil
+        shutil.rmtree(save_dir)
+    save_dir.mkdir(exist_ok=True)
+    
+    print("开始爬取前100页数据...")
+    
     # 启动多线程爬取（1-100页）
     threads = []
-    for i in range(1, 101):
+    active_threads = []
+    
+    for i in range(1, 101):  # 爬取前100页
         t = threading.Thread(target=car, args=(i,))
         threads.append(t)
+        active_threads.append(t)
         t.start()
-        time.sleep(0.1)  # 错开线程启动时间，减少并发压力
+        
+        # 控制并发数量，避免过多连接
+        if len(active_threads) >= 3:  # 最多同时运行3个线程
+            # 等待最早开始的线程完成
+            active_threads[0].join(timeout=60)  # 设置超时时间
+            active_threads.pop(0)
+        
+        time.sleep(1)  # 错开线程启动时间，减少并发压力
 
     # 等待所有线程完成
-    for t in threads:
-        t.join()
+    for t in active_threads:
+        t.join(timeout=60)  # 设置超时时间
     print('全部爬取完成')
