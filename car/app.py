@@ -1,6 +1,6 @@
 from database import get_conn, read_data, verify_user, create_user, check_username_exists
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
-from pyecharts.charts import Pie, Line
+from pyecharts.charts import Pie, Line, Bar
 from pyecharts import options as opts
 from pathlib import Path
 import urllib.parse
@@ -11,6 +11,7 @@ import re
 from utils import safe_name, q, QINIU_DOMAIN
 from statistics import get_statistics_data
 from functools import wraps
+import requests
 
 # 配置项目路径
 project_root = os.path.join(os.path.dirname(__file__))
@@ -361,7 +362,25 @@ def create_charts(stats_data):
         )
     )
 
-    return pie, line
+    # 年份分布柱状图
+    year_data = stats_data.get('year_data', [])
+    bar = None
+    if year_data:
+        years = [item['year'] for item in year_data]
+        counts = [item['count'] for item in year_data]
+        bar = (
+            Bar(init_opts=init_opts)
+            .add_xaxis(years)
+            .add_yaxis("二手车数量", counts)
+            .set_global_opts(
+                title_opts=opts.TitleOpts(title="各年份二手车数量分布"),
+                xaxis_opts=opts.AxisOpts(type_="category"),
+                yaxis_opts=opts.AxisOpts(type_="value"),
+            )
+            .set_series_opts(label_opts=opts.LabelOpts(is_show=True))
+        )
+
+    return pie, line, bar
 
 
 @app.route('/analytics')
@@ -372,11 +391,12 @@ def analytics():
         conn = get_conn()
         stats_data = get_statistics_data(conn)
         if stats_data:
-            pie_chart, line_chart = create_charts(stats_data)
+            pie_chart, line_chart, bar_chart = create_charts(stats_data)
             return render_template(
                 'analytics.html',
                 pie_chart=pie_chart.render_embed() if pie_chart else None,
                 line_chart=line_chart.render_embed(),
+                bar_chart=bar_chart.render_embed() if bar_chart else None,
                 stats_data=stats_data
             )
         else:
@@ -490,6 +510,46 @@ def refresh_recommendations():
             'success': False,
             'message': f'获取推荐车辆时出错: {str(e)}'
         }), 500
+
+
+@app.route('/api/check_login')
+def check_login():
+    return jsonify({'logged_in': 'user' in session})
+
+
+@app.route('/api/ai-assistant', methods=['POST'])
+def ai_assistant():
+    """AI助理接口：接收用户问题，调用通义千问API，返回AI答案"""
+    data = request.get_json()
+    question = data.get('question', '').strip()
+    if not question:
+        return jsonify({'answer': '请输入您的问题'}), 400
+    # 通义千问API配置
+    api_key = 'sk-3b5dd537e2b2436abe2e766f7761b408'
+    url = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation'
+    headers = {
+        'Authorization': f'Bearer {api_key}',
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        "model": "qwen-turbo",
+        "input": {
+            "prompt": question
+        }
+    }
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=15)
+        if resp.status_code == 200:
+            result = resp.json()
+            # 解析通义千问返回内容（根据API文档调整）
+            answer = result.get('output', {}).get('text') or result.get('result', {}).get('output', {}).get('text')
+            if not answer:
+                answer = result.get('choices', [{}])[0].get('message', {}).get('content', 'AI未能理解您的问题')
+            return jsonify({'answer': answer})
+        else:
+            return jsonify({'answer': 'AI服务暂时不可用'}), 500
+    except Exception as e:
+        return jsonify({'answer': 'AI服务异常'}), 500
 
 
 if __name__ == '__main__':

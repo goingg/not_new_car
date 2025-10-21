@@ -35,7 +35,7 @@
                     <a href="/" class="text-2xl font-bold text-primary">车淘淘</a>
                 </div>
 
-                <!-- 导航链接 -->
+                <!-- ��航链接 -->
                 <div class="flex items-center space-x-1">
                     <a href="/" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 transition-colors">
                         <i class="fa fa-home mr-2"></i>首页
@@ -43,7 +43,7 @@
                     <a href="/cars" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center">
                         <i class="fa fa-car mr-2"></i>二手车
                     </a>
-                    <a href="/analytics" class="nav-link active text-primary font-medium px-5 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center">
+                    <a href="/analytics" id="analytics-link" class="nav-link active text-primary font-medium px-5 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center">
                         <i class="fa fa-line-chart mr-2"></i>数据分析
                     </a>
                     {% if session.user %}
@@ -78,27 +78,23 @@
 
             <!-- 数据概览 -->
             <div class="grid grid-cols-4 gap-4 mb-8" id="data-overview">
-                <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                    <h3 class="text-sm font-medium text-blue-800 mb-2">平均价格</h3>
-                    <p class="text-2xl font-bold text-blue-900">¥{{ "{:,}".format(stats_data.avg_price|int) }}</p>
+                <div class="bg-red-50 rounded-xl p-4 border border-red-100">
+                    <h3 class="text-sm font-medium text-red-800 mb-2">收录二手车</h3>
+                    <p class="text-2xl font-bold text-red-900">{{ stats_data.total_count }}</p>
                 </div>
                 <div class="bg-green-50 rounded-xl p-4 border border-green-100">
-                    <h3 class="text-sm font-medium text-green-800 mb-2">交易量</h3>
-                    <p class="text-2xl font-bold text-green-900">{{ stats_data.total_count }}</p>
+                    <h3 class="text-sm font-medium text-green-800 mb-2">收录品牌</h3>
+                    <p class="text-2xl font-bold text-green-900">{{ stats_data.brand_count }}</p>
                 </div>
-                <div class="bg-purple-50 rounded-xl p-4 border border-purple-100">
-                    <h3 class="text-sm font-medium text-purple-800 mb-2">平均车龄</h3>
-                    <p class="text-2xl font-bold text-purple-900">{{ "%.1f"|format(stats_data.avg_year) }}年</p>
-                </div>
-                <div class="bg-orange-50 rounded-xl p-4 border border-orange-100">
-                    <h3 class="text-sm font-medium text-orange-800 mb-2">平均里程</h3>
-                    <p class="text-2xl font-bold text-orange-900">{{ "{:,.0f}".format(stats_data.avg_mileage) }}公里</p>
-                </div>
+                <a href="#ai-analysis" id="ai-analysis-btn" class="bg-yellow-50 rounded-xl p-4 border border-blue-100 col-span-2 flex items-center cursor-pointer">
+                    <h3 class="text-sm font-medium text-blue-800 mb-0 mr-4">AI分析</h3>
+                    <p class="text-2xl font-bold text-blue-900">帮 您 找 到 您 最 理 想 的 二 手 车</p>
+                </a>
             </div>
 
             <!-- 图表区域 -->
             <div class="grid grid-cols-2 gap-8">
-                <!-- 品牌分布饼图 -->
+                <!-- 品牌分布饼图（百分比制，含其他） -->
                 <div>
                     <h3 class="text-lg font-semibold mb-4">品牌分布</h3>
                     <div class="bg-white rounded-xl border border-gray-200 p-4 h-80 flex items-center justify-center">
@@ -112,12 +108,12 @@
                     </div>
                 </div>
                 
-                <!-- 价格趋势图 -->
+                <!-- 年份分布柱状图 -->
                 <div>
-                    <h3 class="text-lg font-semibold mb-4">二手车价格趋势</h3>
+                    <h3 class="text-lg font-semibold mb-4">各年份二手车数量分布</h3>
                     <div class="bg-white rounded-xl border border-gray-200 p-4 h-80 flex items-center justify-center">
                         <div class="w-full h-full">
-                            {{ line_chart|safe }}
+                            {{ bar_chart|safe }}
                         </div>
                     </div>
                 </div>
@@ -152,6 +148,28 @@
         </div>
     </footer>
     
+    <!-- 弹窗提示 -->
+    <div id="login-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-80 text-center">
+            <h3 class="text-lg font-semibold mb-4 text-primary">请先登录</h3>
+            <p class="mb-6 text-gray-700">登录后可访问数据分析页面</p>
+            <button id="close-modal" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700">知道了</button>
+        </div>
+    </div>
+
+    <!-- AI助理对话框 -->
+    <div id="ai-assistant-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md text-center relative">
+            <button id="close-ai-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700"><i class="fa fa-times"></i></button>
+            <h3 class="text-lg font-semibold mb-4 text-primary">AI助理 - 选车&答疑</h3>
+            <div id="ai-chat-history" class="h-56 overflow-y-auto bg-gray-50 rounded p-2 mb-4 text-left text-sm border border-gray-100"></div>
+            <div class="flex items-center gap-2">
+                <input id="ai-user-input" type="text" class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring" placeholder="请输入您的问题...">
+                <button id="ai-send-btn" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fa fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -170,6 +188,76 @@
                     if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
                         userMenu.classList.add('hidden');
                     }
+                });
+            }
+            // 数据分析菜单弹窗逻辑
+            var analyticsLink = document.getElementById('analytics-link');
+            var loginModal = document.getElementById('login-modal');
+            var closeModal = document.getElementById('close-modal');
+            var isLoggedIn = {{ 'true' if session.user else 'false' }};
+            if (analyticsLink) {
+                analyticsLink.addEventListener('click', function(e) {
+                    if (!isLoggedIn) {
+                        e.preventDefault();
+                        loginModal.classList.remove('hidden');
+                    }
+                });
+            }
+            if (closeModal) {
+                closeModal.addEventListener('click', function() {
+                    loginModal.classList.add('hidden');
+                });
+            }
+            // AI分析按钮弹窗逻辑
+            var aiBtn = document.getElementById('ai-analysis-btn');
+            var aiModal = document.getElementById('ai-assistant-modal');
+            var closeAiModal = document.getElementById('close-ai-modal');
+            var aiSendBtn = document.getElementById('ai-send-btn');
+            var aiUserInput = document.getElementById('ai-user-input');
+            var aiChatHistory = document.getElementById('ai-chat-history');
+            if (aiBtn && aiModal) {
+                aiBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    aiModal.classList.remove('hidden');
+                });
+            }
+            if (closeAiModal) {
+                closeAiModal.addEventListener('click', function() {
+                    aiModal.classList.add('hidden');
+                });
+            }
+            function appendMessage(role, text) {
+                var msg = document.createElement('div');
+                msg.className = role === 'user' ? 'text-right mb-2' : 'text-left mb-2';
+                msg.innerHTML = role === 'user' ? '<span class="inline-block bg-primary text-white rounded px-2 py-1">' + text + '</span>' : '<span class="inline-block bg-gray-200 text-gray-800 rounded px-2 py-1">' + text + '</span>';
+                aiChatHistory.appendChild(msg);
+                aiChatHistory.scrollTop = aiChatHistory.scrollHeight;
+            }
+            if (aiSendBtn && aiUserInput) {
+                aiSendBtn.addEventListener('click', sendAiMsg);
+                aiUserInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') sendAiMsg();
+                });
+            }
+            function sendAiMsg() {
+                var question = aiUserInput.value.trim();
+                if (!question) return;
+                appendMessage('user', question);
+                aiUserInput.value = '';
+                appendMessage('ai', '思考中...');
+                fetch('/api/ai-assistant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: question })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    aiChatHistory.lastChild.remove(); // 移除“思考中...”
+                    appendMessage('ai', data.answer || 'AI未能理解您的问题');
+                })
+                .catch(() => {
+                    aiChatHistory.lastChild.remove();
+                    appendMessage('ai', 'AI服务暂时不可用');
                 });
             }
         });

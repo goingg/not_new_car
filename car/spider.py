@@ -41,53 +41,6 @@ def upload_to_bucket(local_path, key):
         return False
 
 
-def get_car_detail(detail_url, headers):
-    """获取车辆详细信息"""
-    try:
-        res = session.get(detail_url, headers=headers, timeout=(5, 10))
-        res.encoding = res.apparent_encoding
-        soup = BeautifulSoup(res.text, 'lxml')
-        
-        # 提取详细信息
-        details = {}
-        
-        # 定义需要提取的字段列表 (字段名, 页面显示名称)
-        fields_to_extract = [
-            ('register_time', '上牌时间'),
-            ('mileage', '表显里程'),
-            ('gearbox', '变速箱'),
-            ('emission_standard', '排放标准'),
-            ('displacement', '排量'),
-            ('release_time', '发布时间'),
-            ('inspection_due', '年检到期'),
-            ('insurance_due', '保险到期'),
-            ('warranty_due', '质保到期'),
-            ('transfer_count', '过户次数'),
-            ('location', '所在地'),
-            ('engine', '发动机'),
-            ('car_level', '车辆级别'),
-            ('body_color', '车身颜色'),
-            ('fuel_grade', '燃油标号'),
-            ('drive_mode', '驱动方式')
-        ]
-        
-        # 循环提取各个字段
-        for field_name, display_name in fields_to_extract:
-            elem = soup.select_one(f'.basic-item-ul li:has(span.item-name:contains("{display_name}"))')
-            if elem:
-                item_name = elem.select_one('.item-name')
-                if item_name:
-                    details[field_name] = html.unescape(
-                        elem.get_text(strip=True).replace(
-                            item_name.get_text(strip=True), '')
-                    )
-        
-        return details
-    except Exception as e:
-        print(f"获取车辆详细信息失败: {e}")
-        return {}
-
-
 def car(page=1):
     url = f"https://car.autohome.com.cn/2sc/china/a0_0msdgscncgpi1ltocsp{page}ex/"
     headers = {

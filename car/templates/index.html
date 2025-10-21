@@ -61,7 +61,7 @@
                     <a href="/cars" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center" data-target="cars">
                         <i class="fa fa-car mr-2"></i>二手车
                     </a>
-                    <a href="/analytics" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center" data-target="analytics">
+                    <a href="/analytics" id="analytics-link" class="nav-link text-gray-600 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors flex items-center" data-target="analytics">
                         <i class="fa fa-line-chart mr-2"></i>数据分析
                     </a>
                     {% if session.user %}
@@ -104,7 +104,7 @@
                                 <a href="/cars" class="nav-link bg-white text-primary px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors flex items-center" data-target="cars">
                                     <i class="fa fa-search mr-2"></i> 查看全部
                                 </a>
-                                <a href="/analytics" class="nav-link bg-accent text-white px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors flex items-center" data-target="analytics">
+                                <a href="/analytics" id="analytics-link-hero" class="nav-link bg-accent text-white px-5 py-2 rounded-full font-medium shadow-lg hover:bg-opacity-90 transition-colors flex items-center" data-target="analytics">
                                     <i class="fa fa-line-chart mr-2"></i> 数据分析
                                 </a>
                             </div>
@@ -465,7 +465,73 @@
                     }
                 });
             }
+
+            // 数据分析菜单弹窗逻辑
+            var analyticsLinks = [
+                document.getElementById('analytics-link'),
+                document.getElementById('analytics-link-hero')
+            ];
+            var loginModal = document.getElementById('login-modal');
+            var closeModal = document.getElementById('close-modal');
+            var isLoggedIn = {{ 'true' if session.user else 'false' }};
+            analyticsLinks.forEach(function(link) {
+                if (link) {
+                    link.addEventListener('click', function(e) {
+                        if (!isLoggedIn) {
+                            e.preventDefault();
+                            loginModal.classList.remove('hidden');
+                        }
+                    });
+                }
+            });
+            if (closeModal) {
+                closeModal.addEventListener('click', function() {
+                    loginModal.classList.add('hidden');
+                });
+            }
         });
+    </script>
+
+    <!-- 弹窗提示 -->
+    <div id="login-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-80 text-center">
+            <h3 class="text-lg font-semibold mb-4 text-primary">请先登录</h3>
+            <p class="mb-6 text-gray-700">登录后可访问数据分析页面</p>
+            <button id="close-modal" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700">知道了</button>
+        </div>
+    </div>
+
+    <!-- 数据分析按钮弹窗登录逻辑 -->
+    <script>
+    function checkLoginAndNavigate(e, url) {
+        e.preventDefault();
+        fetch('/api/check_login')
+            .then(res => res.json())
+            .then(data => {
+                if (data.logged_in) {
+                    window.location.href = url;
+                } else {
+                    alert('请先登录后再访问数据分析页面');
+                }
+            })
+            .catch(() => {
+                alert('无法判断登录状态，请稍后重试');
+            });
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var analyticsBtn = document.getElementById('analytics-link');
+        if (analyticsBtn) {
+            analyticsBtn.addEventListener('click', function(e) {
+                checkLoginAndNavigate(e, '/analytics');
+            });
+        }
+        var analyticsHeroBtn = document.getElementById('analytics-link-hero');
+        if (analyticsHeroBtn) {
+            analyticsHeroBtn.addEventListener('click', function(e) {
+                checkLoginAndNavigate(e, '/analytics');
+            });
+        }
+    });
     </script>
 </body>
 </html>
