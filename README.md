@@ -12,7 +12,7 @@ car/
     app.py           # 主入口，Flask 路由与页面逻辑
     database.py      # 数据库连接与操作
     spider.py        # 爬虫采集与图片上传
-    statistics.py    # 统计分析逻辑
+    analysis.py    # 统计分析逻辑
     utils.py         # 工具函数与统一配置
     car_img/         # 本地图片存储
     templates/       # 前端页面模板
@@ -105,7 +105,7 @@ python car/app.py
 ### 数据采集
 1. 运行爬虫脚本，自动创建数据库和表结构
 2. 爬虫多线程爬取第三方平台二手车数据
-3. 文字信息经`safe_name`处理后写入 MySQL 数据库
+3. 文字信息经处理后写入 MySQL 数据库
 4. 图片下载到本地并上传至七牛云存储
 
 ### 用户浏览

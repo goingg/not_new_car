@@ -9,7 +9,7 @@ import sys
 import os
 import re
 from utils import safe_name, q, QINIU_DOMAIN
-from statistics import get_statistics_data
+from analysis import get_statistics_data
 from functools import wraps
 import requests
 

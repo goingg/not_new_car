@@ -101,7 +101,7 @@ def get_statistics_data(conn):
             avg_mileage_result = cursor.fetchone()
             avg_mileage = avg_mileage_result['avg_mileage'] if avg_mileage_result['avg_mileage'] else 0
 
-            # 品牌总数
+            # 品牌��数
             brand_count = len(brand_counter)
 
             # 返回统计数据
