@@ -17,7 +17,6 @@ sys.path.insert(0, project_root)
 # 从项目根目录导入数据库模块
 from database import get_conn, save_data, init_table
 from utils import safe_name, q, BUCKET_NAME
-import pymysql
 
 # 配置请求会话，增加重试机制和超时设置
 session = requests.Session()
