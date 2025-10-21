@@ -522,6 +522,7 @@ def ai_assistant():
     """AI助理接口：接收用户问题，调用通义千问API，返回AI答案"""
     data = request.get_json()
     question = data.get('question', '').strip()
+    is_greeting = data.get('is_greeting', False)
     if not question:
         return jsonify({'answer': '请输入您的问题'}), 400
     # 通义千问API配置
@@ -531,17 +532,22 @@ def ai_assistant():
         'Authorization': f'Bearer {api_key}',
         'Content-Type': 'application/json'
     }
+    # 限定AI只回答二手车相关内容
+    system_prompt = "你是一个专注于二手车领域的智能助理，只能解答二手车买卖、选购、行情、车型、价格等相关问题，对于其他领域请直接拒绝回答。"
+    if is_greeting:
+        prompt = question  # 问候时直接用前端传来的问候指令
+    else:
+        prompt = f"{system_prompt}\n用户提问：{question}"
     payload = {
         "model": "qwen-turbo",
         "input": {
-            "prompt": question
+            "prompt": prompt
         }
     }
     try:
         resp = requests.post(url, headers=headers, json=payload, timeout=15)
         if resp.status_code == 200:
             result = resp.json()
-            # 解析通义千问返回内容（根据API文档调整）
             answer = result.get('output', {}).get('text') or result.get('result', {}).get('output', {}).get('text')
             if not answer:
                 answer = result.get('choices', [{}])[0].get('message', {}).get('content', 'AI未能理解您的问题')

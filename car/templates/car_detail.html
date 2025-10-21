@@ -86,7 +86,7 @@
                 <div class="flex flex-col lg:flex-row gap-8">
                     <!-- 车辆图片 -->
                     <div class="lg:w-1/2">
-                        <div class="bg-gray-100 rounded-lg overflow-hidden">
+                        <div class="w-full h-96 rounded-lg overflow-hidden">
                             <img src="{{ car.image_path }}" alt="{{ car.name }}" class="w-full h-96 object-contain">
                         </div>
                     </div>
@@ -128,10 +128,10 @@
                         </div>
                         
                         <div class="mt-8 flex gap-4">
-                            <button class="flex-1 bg-primary hover:bg-blue-800 text-white py-3 px-6 rounded-lg font-medium transition-colors">
+                            <button id="contact-sales-btn" class="flex-1 bg-primary hover:bg-blue-800 text-white py-3 px-6 rounded-lg font-medium transition-colors">
                                 <i class="fa fa-phone mr-2"></i> 联系销售
                             </button>
-                            <button class="flex-1 bg-accent hover:bg-orange-700 text-white py-3 px-6 rounded-lg font-medium transition-colors">
+                            <button id="reserve-view-btn" class="flex-1 bg-accent hover:bg-orange-700 text-white py-3 px-6 rounded-lg font-medium transition-colors">
                                 <i class="fa fa-calendar mr-2"></i> 预约看车
                             </button>
                         </div>
@@ -220,6 +220,27 @@
         </div>
     </main>
 
+    <!-- 联系销售弹窗 -->
+    <div id="contact-sales-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-80 text-center relative">
+            <button id="close-contact-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700"><i class="fa fa-times"></i></button>
+            <h3 class="text-lg font-semibold mb-4 text-primary">联系销售</h3>
+            <p class="mb-6 text-gray-700">请拨打销售电话：</p>
+            <div class="text-2xl font-bold text-primary mb-6">400-123-4567</div>
+            <button id="contact-modal-call-btn" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 w-full"><i class="fa fa-phone mr-2"></i>立即拨打</button>
+        </div>
+    </div>
+
+    <!-- 预约成功弹窗 -->
+    <div id="reserve-success-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-80 text-center relative">
+            <button id="close-reserve-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700"><i class="fa fa-times"></i></button>
+            <h3 class="text-lg font-semibold mb-4 text-accent">预约成功</h3>
+            <p class="mb-6 text-gray-700">您的预约已提交，我们的销售会尽快与您联系！</p>
+            <button id="reserve-modal-ok-btn" class="bg-accent text-white px-4 py-2 rounded hover:bg-orange-700 w-full">知道了</button>
+        </div>
+    </div>
+
     <!-- 页脚 -->
     <footer class="bg-gray-800 text-white py-8">
         <div class="container mx-auto px-4">
@@ -254,6 +275,61 @@
                     }
                 });
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.getElementById('contact-sales-btn');
+            var modal = document.getElementById('contact-sales-modal');
+            var closeBtn = document.getElementById('close-contact-modal');
+            var callBtn = document.getElementById('contact-modal-call-btn');
+            if (btn && modal) {
+                btn.addEventListener('click', function() {
+                    modal.classList.remove('hidden');
+                });
+            }
+            if (closeBtn && modal) {
+                closeBtn.addEventListener('click', function() {
+                    modal.classList.add('hidden');
+                });
+            }
+            if (callBtn) {
+                callBtn.addEventListener('click', function() {
+                    window.location.href = 'tel:4001234567';
+                });
+            }
+            // 点击模态框外部关闭
+            modal && modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+
+            // 预约看车弹窗逻辑
+            var reserveBtn = document.getElementById('reserve-view-btn');
+            var reserveModal = document.getElementById('reserve-success-modal');
+            var closeReserveBtn = document.getElementById('close-reserve-modal');
+            var okReserveBtn = document.getElementById('reserve-modal-ok-btn');
+            if (reserveBtn && reserveModal) {
+                reserveBtn.addEventListener('click', function() {
+                    reserveModal.classList.remove('hidden');
+                });
+            }
+            if (closeReserveBtn && reserveModal) {
+                closeReserveBtn.addEventListener('click', function() {
+                    reserveModal.classList.add('hidden');
+                });
+            }
+            if (okReserveBtn && reserveModal) {
+                okReserveBtn.addEventListener('click', function() {
+                    reserveModal.classList.add('hidden');
+                });
+            }
+            // 点击模态框外部关闭
+            reserveModal && reserveModal.addEventListener('click', function(e) {
+                if (e.target === reserveModal) {
+                    reserveModal.classList.add('hidden');
+                }
+            });
         });
     </script>
 </body>

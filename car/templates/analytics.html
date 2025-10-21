@@ -219,6 +219,9 @@
                 aiBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     aiModal.classList.remove('hidden');
+                    aiChatHistory.innerHTML = '';
+                    // 自动发送系统问候
+                    sendAiMsg('请用一句简短的话向用户问好，并说明你是二手车智能助理，只能解答二手车买卖、选购、行情、车型等相关问题，其他领域请拒绝回答, 无法回答说的委婉一点。');
                 });
             }
             if (closeAiModal) {
@@ -239,16 +242,16 @@
                     if (e.key === 'Enter') sendAiMsg();
                 });
             }
-            function sendAiMsg() {
-                var question = aiUserInput.value.trim();
+            function sendAiMsg(customQuestion) {
+                var question = typeof customQuestion === 'string' ? customQuestion : aiUserInput.value.trim();
                 if (!question) return;
-                appendMessage('user', question);
-                aiUserInput.value = '';
+                if (!customQuestion) appendMessage('user', question);
+                if (!customQuestion) aiUserInput.value = '';
                 appendMessage('ai', '思考中...');
                 fetch('/api/ai-assistant', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: question })
+                    body: JSON.stringify({ question: question, is_greeting: !!customQuestion })
                 })
                 .then(res => res.json())
                 .then(data => {
@@ -264,3 +267,4 @@
     </script>
 </body>
 </html>
+

@@ -24,18 +24,18 @@
     <style>
         /* 英雄区域响应式高度 */
         .hero-container {
-            height: 433px;
+            height: 300px;
         }
         
         @media (min-width: 768px) {
             .hero-container {
-                height: 433px;
+                height: 300px;
             }
         }
         
         @media (min-width: 1024px) {
             .hero-container {
-                height: 433px;
+                height: 300px;
             }
         }
     </style>
@@ -115,7 +115,8 @@
                                 {% for car in recommended_cars %}
                                 <div class="carousel-item absolute inset-0 transition-opacity duration-700 {% if loop.index0 == 0 %}opacity-100 z-10{% else %}opacity-0 z-0{% endif %}">
                                     <a href="/car/{{ car.id }}" class="block w-full h-full">
-                                        <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-full object-cover rounded-xl">
+                                        <img src="{{ car.image_path }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-full object-cover rounded-xl" loading="lazy"
+    srcset="{{ car.image_path }} 1x, {{ car.image_path }} 2x">
                                         <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-4">
                                             <div class="text-lg font-bold">{{ car.brand }} {{ car.model }}</div>
                                             <div class="text-sm">{{ car.year }}年 · {{ car.mileage }}</div>
